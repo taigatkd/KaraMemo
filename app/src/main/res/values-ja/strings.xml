@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">カラオケメモ</string>
+
+    <string name="tab_artists">アーティスト</string>
+    <string name="tab_songs">曲</string>
+    <string name="tab_playlists">プレイリスト</string>
+
+    <string name="title_sort_songs">曲の並び替え</string>
+    <string name="title_add_song">曲を追加</string>
+    <string name="title_edit_song">曲を編集</string>
+    <string name="title_add_artist">アーティストを追加</string>
+    <string name="title_create_playlist">プレイリストを作成</string>
+    <string name="title_random_picks">ランダムピック</string>
+    <string name="title_playlist_song_picker">%1$s の曲を編集</string>
+    <string name="title_karaoke_settings">カラオケ機器設定</string>
+    <string name="title_delete_song">曲を削除しますか？</string>
+    <string name="title_delete_artist">アーティストの曲を削除しますか？</string>
+    <string name="title_delete_playlist">プレイリストを削除しますか？</string>
+
+    <string name="action_search">検索</string>
+    <string name="action_hide_search">検索を閉じる</string>
+    <string name="action_sort">並び替え</string>
+    <string name="action_random">ランダム</string>
+    <string name="action_settings">設定</string>
+    <string name="action_add_song">曲を追加</string>
+    <string name="action_add_artist">アーティストを追加</string>
+    <string name="action_add_playlist">プレイリストを追加</string>
+    <string name="action_add_song_to_artist">曲を追加</string>
+    <string name="action_manage_songs">曲を管理</string>
+    <string name="action_show_songs">曲を表示</string>
+    <string name="action_hide_songs">曲を隠す</string>
+    <string name="action_pin">ピン留め</string>
+    <string name="action_unpin">ピン解除</string>
+    <string name="action_edit">編集</string>
+    <string name="action_delete">削除</string>
+    <string name="action_cancel">キャンセル</string>
+    <string name="action_close">閉じる</string>
+    <string name="action_save">保存</string>
+    <string name="action_next">次へ</string>
+    <string name="action_favorite">お気に入り</string>
+    <string name="action_unfavorite">お気に入り解除</string>
+
+    <string name="sort_newest_first">新しい順</string>
+    <string name="sort_oldest_first">古い順</string>
+    <string name="sort_title_order">タイトル順</string>
+    <string name="sort_favorites_first">お気に入り優先</string>
+
+    <string name="label_search_song">アーティスト名または曲名で検索</string>
+    <string name="label_artist_name">アーティスト名</string>
+    <string name="label_song_title">曲名</string>
+    <string name="label_playlist_name">プレイリスト名</string>
+    <string name="label_playlist">プレイリスト</string>
+    <string name="label_not_assigned">未設定</string>
+    <string name="label_key">キー %1$s</string>
+    <string name="label_memo">メモ</string>
+    <string name="label_mark_favorite">お気に入りに追加</string>
+    <string name="label_song_count">%1$d曲</string>
+    <string name="label_setting_value">%1$s %2$d</string>
+    <string name="label_bgm">BGM</string>
+    <string name="label_mic">マイク</string>
+    <string name="label_echo">エコー</string>
+    <string name="label_music">Music</string>
+    <string name="machine_dam">DAM</string>
+    <string name="machine_joysound">JOYSOUND</string>
+
+    <string name="button_save_song">曲を保存</string>
+    <string name="button_update_song">曲を更新</string>
+    <string name="button_save_selection">選択を保存</string>
+
+    <string name="empty_songs_title">まだ曲がありません。</string>
+    <string name="empty_songs_message">下のボタンから最初の曲を追加してください。</string>
+    <string name="empty_artists">まだアーティストがありません。</string>
+    <string name="empty_playlists">まだプレイリストがありません。</string>
+    <string name="empty_playlist_detail">このプレイリストにはまだ曲がありません。</string>
+
+    <string name="message_delete_song">%1$s をリストから削除しますか？</string>
+    <string name="message_delete_artist">%1$s に登録されている曲をすべて削除しますか？</string>
+    <string name="message_delete_playlist">%1$s を削除し、割り当て済みの曲からも外しますか？</string>
+
+    <string name="snackbar_no_songs">まだ曲が追加されていません。</string>
+    <string name="message_required_song">アーティスト名と曲名は必須です。</string>
+    <string name="message_duplicate_song">その曲はすでに登録されています。</string>
+    <string name="message_song_saved">曲を保存しました。</string>
+    <string name="message_song_updated">曲を更新しました。</string>
+    <string name="message_song_deleted">曲を削除しました。</string>
+    <string name="message_artist_deleted">%1$s の曲をすべて削除しました。</string>
+    <string name="message_required_playlist">プレイリスト名は必須です。</string>
+    <string name="message_duplicate_playlist">そのプレイリストはすでに存在します。</string>
+    <string name="message_playlist_created">プレイリストを作成しました。</string>
+    <string name="message_playlist_deleted">プレイリストを削除しました。</string>
+    <string name="message_playlist_updated">プレイリストの曲を更新しました。</string>
+
+    <string name="ad_banner">広告バナー</string>
+    <string name="ad_placeholder">広告プレースホルダー</string>
+</resources>

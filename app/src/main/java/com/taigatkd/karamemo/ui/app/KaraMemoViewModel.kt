@@ -2,6 +2,8 @@ package com.taigatkd.karamemo.ui.app
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.taigatkd.karamemo.R
+import com.taigatkd.karamemo.common.StringResolver
 import com.taigatkd.karamemo.data.repository.PlaylistRepository
 import com.taigatkd.karamemo.data.repository.PreferencesRepository
 import com.taigatkd.karamemo.data.repository.SongRepository
@@ -23,6 +25,7 @@ class KaraMemoViewModel(
     private val songRepository: SongRepository,
     private val playlistRepository: PlaylistRepository,
     private val preferencesRepository: PreferencesRepository,
+    private val stringResolver: StringResolver,
 ) : ViewModel() {
     private data class RepositorySnapshot(
         val songs: List<Song>,
@@ -127,12 +130,12 @@ class KaraMemoViewModel(
         val normalizedPlaylistId = playlistId?.takeIf { it.isNotBlank() }
 
         if (normalizedArtist.isEmpty() || normalizedTitle.isEmpty()) {
-            messages.emit("Artist and song title are required.")
+            messages.emit(stringResolver.get(R.string.message_required_song))
             return false
         }
 
         if (songRepository.isDuplicateSong(normalizedArtist, normalizedTitle, editingSongId)) {
-            messages.emit("That song is already registered.")
+            messages.emit(stringResolver.get(R.string.message_duplicate_song))
             return false
         }
 
@@ -153,13 +156,17 @@ class KaraMemoViewModel(
 
         songRepository.saveSong(song)
         preferencesRepository.setLastUsedArtist(normalizedArtist)
-        messages.emit(if (editingSong == null) "Song saved." else "Song updated.")
+        messages.emit(
+            stringResolver.get(
+                if (editingSong == null) R.string.message_song_saved else R.string.message_song_updated,
+            ),
+        )
         return true
     }
 
     suspend fun deleteSong(songId: String) {
         songRepository.deleteSong(songId)
-        messages.emit("Song deleted.")
+        messages.emit(stringResolver.get(R.string.message_song_deleted))
     }
 
     suspend fun toggleFavorite(song: Song) {
@@ -169,18 +176,18 @@ class KaraMemoViewModel(
     suspend fun deleteSongsByArtist(artist: String) {
         songRepository.deleteSongsByArtist(artist)
         preferencesRepository.removeArtistPin(artist)
-        messages.emit("Deleted all songs for $artist.")
+        messages.emit(stringResolver.get(R.string.message_artist_deleted, artist))
     }
 
     suspend fun savePlaylist(name: String): Boolean {
         val normalizedName = name.trim()
         if (normalizedName.isEmpty()) {
-            messages.emit("Playlist name is required.")
+            messages.emit(stringResolver.get(R.string.message_required_playlist))
             return false
         }
 
         if (playlistRepository.isDuplicatePlaylist(normalizedName)) {
-            messages.emit("That playlist already exists.")
+            messages.emit(stringResolver.get(R.string.message_duplicate_playlist))
             return false
         }
 
@@ -191,7 +198,7 @@ class KaraMemoViewModel(
                 createdAt = Instant.now(),
             ),
         )
-        messages.emit("Playlist created.")
+        messages.emit(stringResolver.get(R.string.message_playlist_created))
         return true
     }
 
@@ -203,7 +210,7 @@ class KaraMemoViewModel(
             }
         playlistRepository.deletePlaylist(playlistId)
         preferencesRepository.removePlaylistPin(playlistId)
-        messages.emit("Playlist deleted.")
+        messages.emit(stringResolver.get(R.string.message_playlist_deleted))
     }
 
     suspend fun updatePlaylistMembership(playlistId: String, selectedSongIds: Set<String>) {
@@ -223,7 +230,7 @@ class KaraMemoViewModel(
             songRepository.saveSong(song.copy(playlistId = null))
         }
 
-        messages.emit("Playlist songs updated.")
+        messages.emit(stringResolver.get(R.string.message_playlist_updated))
     }
 
     suspend fun toggleArtistPin(artistName: String) {

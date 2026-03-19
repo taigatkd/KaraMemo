@@ -3,6 +3,8 @@ package com.taigatkd.karamemo.ui.feature.song
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,9 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -20,13 +27,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.AdBanner
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SongListScreen(
     songs: List<Song>,
@@ -34,6 +44,10 @@ fun SongListScreen(
     query: String,
     showSearchBar: Boolean,
     onQueryChange: (String) -> Unit,
+    onToggleSearch: () -> Unit,
+    onOpenSort: () -> Unit,
+    onOpenRandom: () -> Unit,
+    onOpenSettings: () -> Unit,
     onAddSong: () -> Unit,
     onEditSong: (Song) -> Unit,
     onDeleteSong: (Song) -> Unit,
@@ -44,14 +58,59 @@ fun SongListScreen(
         modifier = modifier.fillMaxSize(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                ElevatedAssistChip(
+                    onClick = onToggleSearch,
+                    label = {
+                        Text(
+                            if (showSearchBar) {
+                                stringResource(R.string.action_hide_search)
+                            } else {
+                                stringResource(R.string.action_search)
+                            },
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = null)
+                    },
+                )
+                ElevatedAssistChip(
+                    onClick = onOpenSort,
+                    label = { Text(stringResource(R.string.action_sort)) },
+                    leadingIcon = {
+                        Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = null)
+                    },
+                )
+                ElevatedAssistChip(
+                    onClick = onOpenRandom,
+                    label = { Text(stringResource(R.string.action_random)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Shuffle, contentDescription = null)
+                    },
+                )
+                ElevatedAssistChip(
+                    onClick = onOpenSettings,
+                    label = { Text(stringResource(R.string.action_settings)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.GraphicEq, contentDescription = null)
+                    },
+                )
+            }
+
             if (showSearchBar) {
                 OutlinedTextField(
                     value = query,
                     onValueChange = onQueryChange,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    label = { Text("Search by artist or title") },
+                        .padding(horizontal = 16.dp),
+                    label = { Text(stringResource(R.string.label_search_song)) },
                     singleLine = true,
                 )
             }
@@ -79,14 +138,14 @@ fun SongListScreen(
             AdBanner()
         }
 
-        FloatingActionButton(
+        ExtendedFloatingActionButton(
             onClick = onAddSong,
+            text = { Text(stringResource(R.string.action_add_song)) },
+            icon = { Icon(Icons.Default.Add, contentDescription = null) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp),
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add song")
-        }
+        )
     }
 }
 
@@ -103,12 +162,12 @@ private fun EmptySongsState(modifier: Modifier = Modifier) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "No songs yet.",
-                style = MaterialTheme.typography.titleMedium,
+                text = stringResource(R.string.empty_songs_title),
+                style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(top = 16.dp),
             )
             Text(
-                text = "Add your first song from the button below.",
+                text = stringResource(R.string.empty_songs_message),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -126,6 +185,10 @@ private fun SongListScreenPreview() {
             query = "a",
             showSearchBar = true,
             onQueryChange = {},
+            onToggleSearch = {},
+            onOpenSort = {},
+            onOpenRandom = {},
+            onOpenSettings = {},
             onAddSong = {},
             onEditSong = {},
             onDeleteSong = {},

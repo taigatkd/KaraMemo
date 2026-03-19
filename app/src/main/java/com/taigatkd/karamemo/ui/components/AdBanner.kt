@@ -15,8 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.taigatkd.karamemo.BuildConfig
+import com.taigatkd.karamemo.R
 
 @Composable
 fun AdBanner(
@@ -29,7 +31,7 @@ fun AdBanner(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.88f)),
     ) {
         Column(
             modifier = Modifier
@@ -44,7 +46,11 @@ fun AdBanner(
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = if (BuildConfig.ADS_ENABLED) "Ad banner" else "Ad placeholder",
+                text = if (BuildConfig.ADS_ENABLED) {
+                    stringResource(R.string.ad_banner)
+                } else {
+                    stringResource(R.string.ad_placeholder)
+                },
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

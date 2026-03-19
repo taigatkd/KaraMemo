@@ -1,5 +1,6 @@
 package com.taigatkd.karamemo.ui.app
 
+import com.taigatkd.karamemo.common.StringResolver
 import com.taigatkd.karamemo.data.repository.PlaylistRepository
 import com.taigatkd.karamemo.data.repository.PreferencesRepository
 import com.taigatkd.karamemo.data.repository.SongRepository
@@ -41,6 +42,7 @@ class KaraMemoViewModelTest {
             songRepository = songRepository,
             playlistRepository = FakePlaylistRepository(),
             preferencesRepository = FakePreferencesRepository(),
+            stringResolver = FakeStringResolver(),
         )
 
         val collector = launch { viewModel.uiState.collect {} }
@@ -65,6 +67,7 @@ class KaraMemoViewModelTest {
             songRepository = songRepository,
             playlistRepository = FakePlaylistRepository(),
             preferencesRepository = FakePreferencesRepository(),
+            stringResolver = FakeStringResolver(),
         )
 
         val collector = launch { viewModel.uiState.collect {} }
@@ -103,6 +106,7 @@ class KaraMemoViewModelTest {
             songRepository = songRepository,
             playlistRepository = playlistRepository,
             preferencesRepository = preferencesRepository,
+            stringResolver = FakeStringResolver(),
         )
 
         val collector = launch { viewModel.uiState.collect {} }
@@ -221,6 +225,10 @@ class KaraMemoViewModelTest {
         override suspend fun setLastUsedArtist(artistName: String) {
             lastUsedArtist.value = artistName
         }
+    }
+
+    private class FakeStringResolver : StringResolver {
+        override fun get(resId: Int, vararg formatArgs: Any): String = "message:$resId"
     }
 
     private fun song(

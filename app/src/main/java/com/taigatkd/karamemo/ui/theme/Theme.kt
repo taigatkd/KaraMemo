@@ -1,48 +1,60 @@
 package com.taigatkd.karamemo.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
 private val DarkColors = darkColorScheme(
-    primary = BluePrimary,
-    secondary = LimeAccent,
-    background = DarkBackground,
-    surface = SurfaceDark,
+    primary = AmpGold,
+    onPrimary = NightInk,
+    secondary = SpotlightCoral,
+    onSecondary = StageWhite,
+    tertiary = MintEcho,
+    onTertiary = NightInk,
+    background = NightInk,
+    onBackground = StageWhite,
+    surface = DeepWave,
+    onSurface = StageWhite,
+    surfaceVariant = MidnightStage,
+    onSurfaceVariant = ColorTokens.onSurfaceMutedDark,
+    outline = VinylBlue,
 )
 
 private val LightColors = lightColorScheme(
-    primary = BluePrimary,
-    secondary = OrangeAccent,
-    background = LightBackground,
-    surface = SurfaceLight,
+    primary = SpotlightCoral,
+    onPrimary = StageWhite,
+    secondary = VinylBlue,
+    onSecondary = StageWhite,
+    tertiary = AmpGold,
+    onTertiary = NightInk,
+    background = CreamRoom,
+    onBackground = NightInk,
+    surface = StageWhite,
+    onSurface = NightInk,
+    surfaceVariant = PaperWarm,
+    onSurfaceVariant = CaptionGray,
+    outline = ColorTokens.outlineLight,
 )
+
+private object ColorTokens {
+    val onSurfaceMutedDark = StageWhite.copy(alpha = 0.78f)
+    val outlineLight = VinylBlue.copy(alpha = 0.28f)
+}
 
 @Composable
 fun KaraMemoTheme(
-    useDynamicColor: Boolean = true,
+    useDynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val darkTheme = isSystemInDarkTheme()
-    val colorScheme = when {
-        useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColors
-        else -> LightColors
-    }
+    val colorScheme = if (darkTheme) DarkColors else LightColors
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = KaraMemoShapes,
         content = content,
     )
 }
-

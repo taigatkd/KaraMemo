@@ -3,10 +3,10 @@ package com.taigatkd.karamemo.ui.feature.artist
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,10 +18,11 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,14 +34,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.AdBanner
-import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.feature.song.SongItemRow
+import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ArtistListScreen(
     songs: List<Song>,
@@ -73,57 +77,85 @@ fun ArtistListScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(artists, key = { it }) { artist ->
-                        Card {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
+                        val isExpanded = expandedArtists[artist] == true
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Text(artist, style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    text = stringResource(
+                                        R.string.label_song_count,
+                                        grouped[artist].orEmpty().size,
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(artist, style = MaterialTheme.typography.titleMedium)
-                                        Text(
-                                            text = "${grouped[artist].orEmpty().size} songs",
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                    IconButton(onClick = { onTogglePin(artist) }) {
-                                        Icon(
-                                            imageVector = if (pinnedArtists.contains(artist)) {
-                                                Icons.Default.PushPin
-                                            } else {
-                                                Icons.Outlined.PushPin
-                                            },
-                                            contentDescription = "Toggle pin",
-                                        )
-                                    }
-                                    IconButton(onClick = { onAddSongForArtist(artist) }) {
-                                        Icon(Icons.Default.Add, contentDescription = "Add song")
-                                    }
-                                    IconButton(onClick = { deleteTarget = artist }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Delete artist")
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            expandedArtists[artist] = !(expandedArtists[artist] ?: false)
+                                    AssistChip(
+                                        onClick = { onTogglePin(artist) },
+                                        label = {
+                                            Text(
+                                                if (pinnedArtists.contains(artist)) {
+                                                    stringResource(R.string.action_unpin)
+                                                } else {
+                                                    stringResource(R.string.action_pin)
+                                                },
+                                            )
                                         },
-                                    ) {
-                                        Icon(
-                                            imageVector = if (expandedArtists[artist] == true) {
-                                                Icons.Default.ExpandLess
-                                            } else {
-                                                Icons.Default.ExpandMore
-                                            },
-                                            contentDescription = "Expand artist",
-                                        )
-                                    }
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = if (pinnedArtists.contains(artist)) {
+                                                    Icons.Default.PushPin
+                                                } else {
+                                                    Icons.Outlined.PushPin
+                                                },
+                                                contentDescription = null,
+                                            )
+                                        },
+                                    )
+                                    AssistChip(
+                                        onClick = { onAddSongForArtist(artist) },
+                                        label = { Text(stringResource(R.string.action_add_song_to_artist)) },
+                                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
+                                    )
+                                    AssistChip(
+                                        onClick = { expandedArtists[artist] = !isExpanded },
+                                        label = {
+                                            Text(
+                                                if (isExpanded) {
+                                                    stringResource(R.string.action_hide_songs)
+                                                } else {
+                                                    stringResource(R.string.action_show_songs)
+                                                },
+                                            )
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = if (isExpanded) {
+                                                    Icons.Default.ExpandLess
+                                                } else {
+                                                    Icons.Default.ExpandMore
+                                                },
+                                                contentDescription = null,
+                                            )
+                                        },
+                                    )
+                                    AssistChip(
+                                        onClick = { deleteTarget = artist },
+                                        label = { Text(stringResource(R.string.action_delete)) },
+                                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                                    )
                                 }
 
-                                if (expandedArtists[artist] == true) {
-                                    Column(
-                                        modifier = Modifier.padding(top = 12.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
+                                if (isExpanded) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         grouped[artist].orEmpty().forEach { song ->
                                             SongItemRow(
                                                 song = song,
@@ -144,21 +176,21 @@ fun ArtistListScreen(
             AdBanner()
         }
 
-        FloatingActionButton(
+        ExtendedFloatingActionButton(
             onClick = onAddArtist,
+            text = { Text(stringResource(R.string.action_add_artist)) },
+            icon = { Icon(Icons.Default.Add, contentDescription = null) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp),
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add artist")
-        }
+        )
     }
 
     deleteTarget?.let { artist ->
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
-            title = { Text("Delete artist songs?") },
-            text = { Text("Delete every song registered under $artist?") },
+            title = { Text(stringResource(R.string.title_delete_artist)) },
+            text = { Text(stringResource(R.string.message_delete_artist, artist)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -166,12 +198,12 @@ fun ArtistListScreen(
                         onDeleteArtist(artist)
                     },
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { deleteTarget = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
@@ -182,7 +214,7 @@ fun ArtistListScreen(
 private fun EmptyArtistState(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
-            text = "No artists yet.",
+            text = stringResource(R.string.empty_artists),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

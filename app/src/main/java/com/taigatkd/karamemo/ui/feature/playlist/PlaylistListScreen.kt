@@ -3,10 +3,10 @@ package com.taigatkd.karamemo.ui.feature.playlist
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,10 +19,11 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,15 +35,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Playlist
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.AdBanner
-import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.feature.song.SongItemRow
+import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PlaylistListScreen(
     playlists: List<Playlist>,
@@ -75,59 +79,87 @@ fun PlaylistListScreen(
                 ) {
                     items(sortedPlaylists, key = { it.id }) { playlist ->
                         val playlistSongs = songs.filter { it.playlistId == playlist.id }
-                        Card {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
+                        val isExpanded = expanded[playlist.id] == true
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Text(playlist.name, style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    text = stringResource(R.string.label_song_count, playlistSongs.size),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(playlist.name, style = MaterialTheme.typography.titleMedium)
-                                        Text(
-                                            text = "${playlistSongs.size} songs",
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                    IconButton(onClick = { onTogglePin(playlist.id) }) {
-                                        Icon(
-                                            imageVector = if (pinnedPlaylists.contains(playlist.id)) {
-                                                Icons.Default.PushPin
-                                            } else {
-                                                Icons.Outlined.PushPin
-                                            },
-                                            contentDescription = "Toggle pin",
-                                        )
-                                    }
-                                    IconButton(onClick = { onOpenPicker(playlist) }) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.PlaylistAddCheck,
-                                            contentDescription = "Edit playlist songs",
-                                        )
-                                    }
-                                    IconButton(onClick = { deleteTarget = playlist }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Delete playlist")
-                                    }
-                                    IconButton(onClick = { expanded[playlist.id] = !(expanded[playlist.id] ?: false) }) {
-                                        Icon(
-                                            imageVector = if (expanded[playlist.id] == true) {
-                                                Icons.Default.ExpandLess
-                                            } else {
-                                                Icons.Default.ExpandMore
-                                            },
-                                            contentDescription = "Expand playlist",
-                                        )
-                                    }
+                                    AssistChip(
+                                        onClick = { onTogglePin(playlist.id) },
+                                        label = {
+                                            Text(
+                                                if (pinnedPlaylists.contains(playlist.id)) {
+                                                    stringResource(R.string.action_unpin)
+                                                } else {
+                                                    stringResource(R.string.action_pin)
+                                                },
+                                            )
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = if (pinnedPlaylists.contains(playlist.id)) {
+                                                    Icons.Default.PushPin
+                                                } else {
+                                                    Icons.Outlined.PushPin
+                                                },
+                                                contentDescription = null,
+                                            )
+                                        },
+                                    )
+                                    AssistChip(
+                                        onClick = { onOpenPicker(playlist) },
+                                        label = { Text(stringResource(R.string.action_manage_songs)) },
+                                        leadingIcon = {
+                                            Icon(Icons.AutoMirrored.Filled.PlaylistAddCheck, contentDescription = null)
+                                        },
+                                    )
+                                    AssistChip(
+                                        onClick = { expanded[playlist.id] = !isExpanded },
+                                        label = {
+                                            Text(
+                                                if (isExpanded) {
+                                                    stringResource(R.string.action_hide_songs)
+                                                } else {
+                                                    stringResource(R.string.action_show_songs)
+                                                },
+                                            )
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = if (isExpanded) {
+                                                    Icons.Default.ExpandLess
+                                                } else {
+                                                    Icons.Default.ExpandMore
+                                                },
+                                                contentDescription = null,
+                                            )
+                                        },
+                                    )
+                                    AssistChip(
+                                        onClick = { deleteTarget = playlist },
+                                        label = { Text(stringResource(R.string.action_delete)) },
+                                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                                    )
                                 }
 
-                                if (expanded[playlist.id] == true) {
-                                    Column(
-                                        modifier = Modifier.padding(top = 12.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
+                                if (isExpanded) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         if (playlistSongs.isEmpty()) {
                                             Text(
-                                                text = "This playlist has no songs yet.",
+                                                text = stringResource(R.string.empty_playlist_detail),
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                         } else {
@@ -152,21 +184,21 @@ fun PlaylistListScreen(
             AdBanner()
         }
 
-        FloatingActionButton(
+        ExtendedFloatingActionButton(
             onClick = onAddPlaylist,
+            text = { Text(stringResource(R.string.action_add_playlist)) },
+            icon = { Icon(Icons.Default.Add, contentDescription = null) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp),
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Create playlist")
-        }
+        )
     }
 
     deleteTarget?.let { playlist ->
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
-            title = { Text("Delete playlist?") },
-            text = { Text("Delete ${playlist.name} and remove it from any assigned songs?") },
+            title = { Text(stringResource(R.string.title_delete_playlist)) },
+            text = { Text(stringResource(R.string.message_delete_playlist, playlist.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -174,12 +206,12 @@ fun PlaylistListScreen(
                         onDeletePlaylist(playlist)
                     },
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { deleteTarget = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
@@ -190,7 +222,7 @@ fun PlaylistListScreen(
 private fun EmptyPlaylistState(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
-            text = "No playlists yet.",
+            text = stringResource(R.string.empty_playlists),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

@@ -1,6 +1,7 @@
 package com.taigatkd.karamemo.ui.feature.song
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,9 +12,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -26,10 +25,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Playlist
 import com.taigatkd.karamemo.domain.model.Song
+import com.taigatkd.karamemo.ui.components.KaraMemoModalSheet
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 import kotlinx.coroutines.launch
@@ -40,7 +42,6 @@ data class SongEditorRequest(
     val initialPlaylistId: String? = null,
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SongEditorSheet(
     request: SongEditorRequest,
@@ -70,24 +71,25 @@ fun SongEditorSheet(
     var menuExpanded by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val titleRes = if (existingSong == null) R.string.title_add_song else R.string.title_edit_song
+    val saveRes = if (existingSong == null) R.string.button_save_song else R.string.button_update_song
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    KaraMemoModalSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                text = if (existingSong == null) "Add song" else "Edit song",
+                text = stringResource(titleRes),
                 style = MaterialTheme.typography.headlineSmall,
             )
 
             OutlinedTextField(
                 value = artist,
                 onValueChange = { artist = it },
-                label = { Text("Artist") },
+                label = { Text(stringResource(R.string.label_artist_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
@@ -95,46 +97,55 @@ fun SongEditorSheet(
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Song title") },
+                label = { Text(stringResource(R.string.label_song_title)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
 
             Column {
-                Text("Playlist", style = MaterialTheme.typography.labelLarge)
-                OutlinedButton(
-                    onClick = { menuExpanded = true },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(
-                        text = playlists.firstOrNull { it.id == selectedPlaylistId }?.name ?: "Not assigned",
-                    )
-                }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false },
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Not assigned") },
-                        onClick = {
-                            selectedPlaylistId = null
-                            menuExpanded = false
-                        },
-                    )
-                    playlists.forEach { playlist ->
+                Text(
+                    text = stringResource(R.string.label_playlist),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Box {
+                    OutlinedButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = playlists.firstOrNull { it.id == selectedPlaylistId }?.name
+                                ?: stringResource(R.string.label_not_assigned),
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                    ) {
                         DropdownMenuItem(
-                            text = { Text(playlist.name) },
+                            text = { Text(stringResource(R.string.label_not_assigned)) },
                             onClick = {
-                                selectedPlaylistId = playlist.id
+                                selectedPlaylistId = null
                                 menuExpanded = false
                             },
                         )
+                        playlists.forEach { playlist ->
+                            DropdownMenuItem(
+                                text = { Text(playlist.name) },
+                                onClick = {
+                                    selectedPlaylistId = playlist.id
+                                    menuExpanded = false
+                                },
+                            )
+                        }
                     }
                 }
             }
 
             Column {
-                Text("Key ${if (key > 0) "+" else ""}$key", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = stringResource(R.string.label_key, formatSignedKey(key)),
+                    style = MaterialTheme.typography.labelLarge,
+                )
                 Slider(
                     value = key.toFloat(),
                     onValueChange = { key = it.toInt() },
@@ -146,7 +157,7 @@ fun SongEditorSheet(
             OutlinedTextField(
                 value = memo,
                 onValueChange = { memo = it },
-                label = { Text("Memo") },
+                label = { Text(stringResource(R.string.label_memo)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
             )
@@ -157,7 +168,7 @@ fun SongEditorSheet(
                     onCheckedChange = { checked -> isFavorite = checked },
                 )
                 Text(
-                    text = "Mark as favorite",
+                    text = stringResource(R.string.label_mark_favorite),
                     modifier = Modifier.padding(top = 12.dp),
                 )
             }
@@ -193,11 +204,13 @@ fun SongEditorSheet(
                     .fillMaxWidth()
                     .padding(bottom = 24.dp),
             ) {
-                Text(if (existingSong == null) "Save song" else "Update song")
+                Text(stringResource(saveRes))
             }
         }
     }
 }
+
+private fun formatSignedKey(value: Int): String = if (value > 0) "+$value" else value.toString()
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 892)
 @Composable
