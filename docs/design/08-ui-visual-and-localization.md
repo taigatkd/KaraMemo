@@ -5,7 +5,7 @@ This document defines the UI modernization pass for the Android app.
 
 Goals:
 - make the app feel closer to a music tool than a generic CRUD app
-- replace ambiguous icon-only actions with labeled actions
+- keep familiar actions icon-first and add text only where the icon is not obvious
 - improve usability on small screens without increasing cognitive load
 - support English and Japanese automatically from device locale
 - ensure modal sheets expand fully instead of stopping halfway
@@ -28,9 +28,9 @@ Direction:
 - Move feature actions into the screen body when labels are needed
 
 ### Primary Actions
-- Use `ExtendedFloatingActionButton` for create actions
-- Every primary action must have visible text
-- Secondary actions should prefer chips or buttons with text plus icon
+- Use standard icon-first action buttons where the meaning is already obvious
+- Add visible text only for actions that are ambiguous out of context
+- Floating actions may stay icon-only when the current screen makes the intent obvious
 
 ### Song / Artist / Playlist Cards
 - Show the main identity first
@@ -38,7 +38,8 @@ Direction:
   - artist name and song count
   - playlist name and song count
 - Show metadata as compact tags
-- Show actions as labeled chips, not icon-only clusters
+- Use icon-only actions for edit, favorite, delete, pin, add, and expand/collapse
+- Keep text on actions like playlist song management when the icon alone is not obvious
 
 ### Modal Sheets
 - Use a shared bottom sheet wrapper
@@ -55,7 +56,8 @@ Direction:
 - ViewModel-driven snackbar messages must be resolved from string resources through an injected resolver
 
 ## 5. Accessibility And UX Rules
-- Actions should be readable without guessing the meaning of an icon
+- Icon-only actions must still provide clear accessibility descriptions
+- Actions that are not immediately recognizable should keep a visible label
 - Search, sort, random pick, and settings should remain reachable without overflow menus
 - Cards should preserve clear tap targets and spacing
 - Dialog copy should state the affected entity explicitly
@@ -85,7 +87,7 @@ flowchart TD
 ## 7. Acceptance Criteria
 - Main screens look visually consistent with the music-oriented theme
 - Top-level titles are left-aligned
-- Major actions are understandable from visible labels
+- Familiar actions are icon-first and ambiguous actions still show text
 - Bottom sheets open in full mode without stopping midway
 - English and Japanese switch automatically from device locale
 - Snackbar and dialog messages follow the selected locale

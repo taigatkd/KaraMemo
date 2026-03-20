@@ -14,12 +14,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.ElevatedAssistChip
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.AdBanner
+import com.taigatkd.karamemo.ui.components.KaraMemoActionIconButton
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 
@@ -65,34 +67,24 @@ fun SongListScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                ElevatedAssistChip(
+                KaraMemoActionIconButton(
                     onClick = onToggleSearch,
-                    label = {
-                        Text(
-                            if (showSearchBar) {
-                                stringResource(R.string.action_hide_search)
-                            } else {
-                                stringResource(R.string.action_search)
-                            },
-                        )
+                    contentDescription = if (showSearchBar) {
+                        stringResource(R.string.action_hide_search)
+                    } else {
+                        stringResource(R.string.action_search)
                     },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null)
-                    },
+                    imageVector = if (showSearchBar) Icons.Default.Close else Icons.Default.Search,
                 )
-                ElevatedAssistChip(
+                KaraMemoActionIconButton(
                     onClick = onOpenSort,
-                    label = { Text(stringResource(R.string.action_sort)) },
-                    leadingIcon = {
-                        Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = null)
-                    },
+                    contentDescription = stringResource(R.string.action_sort),
+                    imageVector = Icons.AutoMirrored.Filled.Sort,
                 )
-                ElevatedAssistChip(
+                KaraMemoActionIconButton(
                     onClick = onOpenRandom,
-                    label = { Text(stringResource(R.string.action_random)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Shuffle, contentDescription = null)
-                    },
+                    contentDescription = stringResource(R.string.action_random),
+                    imageVector = Icons.Default.Shuffle,
                 )
                 ElevatedAssistChip(
                     onClick = onOpenSettings,
@@ -138,14 +130,17 @@ fun SongListScreen(
             AdBanner()
         }
 
-        ExtendedFloatingActionButton(
+        FloatingActionButton(
             onClick = onAddSong,
-            text = { Text(stringResource(R.string.action_add_song)) },
-            icon = { Icon(Icons.Default.Add, contentDescription = null) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp),
-        )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = stringResource(R.string.action_add_song),
+            )
+        }
     }
 }
 

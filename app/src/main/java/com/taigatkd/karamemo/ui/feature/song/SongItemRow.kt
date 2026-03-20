@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -37,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Song
+import com.taigatkd.karamemo.ui.components.KaraMemoActionIconButton
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 
@@ -52,7 +52,7 @@ fun SongItemRow(
     showActions: Boolean = true,
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
-    val favoriteLabel = if (song.isFavorite) {
+    val favoriteDescription = if (song.isFavorite) {
         stringResource(R.string.action_unfavorite)
     } else {
         stringResource(R.string.action_favorite)
@@ -151,25 +151,26 @@ fun SongItemRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    AssistChip(
+                    KaraMemoActionIconButton(
                         onClick = { onEdit(song) },
-                        label = { Text(stringResource(R.string.action_edit)) },
-                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        contentDescription = stringResource(R.string.action_edit),
+                        imageVector = Icons.Default.Edit,
                     )
-                    AssistChip(
+                    KaraMemoActionIconButton(
                         onClick = { onToggleFavorite(song) },
-                        label = { Text(favoriteLabel) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = if (song.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = null,
-                            )
+                        contentDescription = favoriteDescription,
+                        imageVector = if (song.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        iconTint = if (song.isFavorite) {
+                            MaterialTheme.colorScheme.secondary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
                         },
                     )
-                    AssistChip(
+                    KaraMemoActionIconButton(
                         onClick = { showDeleteDialog = true },
-                        label = { Text(stringResource(R.string.action_delete)) },
-                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                        contentDescription = stringResource(R.string.action_delete),
+                        imageVector = Icons.Default.Delete,
+                        iconTint = MaterialTheme.colorScheme.error,
                     )
                 }
             }

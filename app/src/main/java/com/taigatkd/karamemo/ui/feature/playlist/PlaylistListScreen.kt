@@ -19,10 +19,10 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,6 +42,7 @@ import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Playlist
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.AdBanner
+import com.taigatkd.karamemo.ui.components.KaraMemoActionIconButton
 import com.taigatkd.karamemo.ui.feature.song.SongItemRow
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
@@ -97,61 +98,45 @@ fun PlaylistListScreen(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    AssistChip(
+                                    KaraMemoActionIconButton(
                                         onClick = { onTogglePin(playlist.id) },
-                                        label = {
-                                            Text(
-                                                if (pinnedPlaylists.contains(playlist.id)) {
-                                                    stringResource(R.string.action_unpin)
-                                                } else {
-                                                    stringResource(R.string.action_pin)
-                                                },
-                                            )
+                                        contentDescription = if (pinnedPlaylists.contains(playlist.id)) {
+                                            stringResource(R.string.action_unpin)
+                                        } else {
+                                            stringResource(R.string.action_pin)
                                         },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = if (pinnedPlaylists.contains(playlist.id)) {
-                                                    Icons.Default.PushPin
-                                                } else {
-                                                    Icons.Outlined.PushPin
-                                                },
-                                                contentDescription = null,
-                                            )
+                                        imageVector = if (pinnedPlaylists.contains(playlist.id)) {
+                                            Icons.Default.PushPin
+                                        } else {
+                                            Icons.Outlined.PushPin
                                         },
+                                        iconTint = MaterialTheme.colorScheme.primary,
                                     )
-                                    AssistChip(
+                                    ElevatedAssistChip(
                                         onClick = { onOpenPicker(playlist) },
                                         label = { Text(stringResource(R.string.action_manage_songs)) },
                                         leadingIcon = {
                                             Icon(Icons.AutoMirrored.Filled.PlaylistAddCheck, contentDescription = null)
                                         },
                                     )
-                                    AssistChip(
+                                    KaraMemoActionIconButton(
                                         onClick = { expanded[playlist.id] = !isExpanded },
-                                        label = {
-                                            Text(
-                                                if (isExpanded) {
-                                                    stringResource(R.string.action_hide_songs)
-                                                } else {
-                                                    stringResource(R.string.action_show_songs)
-                                                },
-                                            )
+                                        contentDescription = if (isExpanded) {
+                                            stringResource(R.string.action_hide_songs)
+                                        } else {
+                                            stringResource(R.string.action_show_songs)
                                         },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = if (isExpanded) {
-                                                    Icons.Default.ExpandLess
-                                                } else {
-                                                    Icons.Default.ExpandMore
-                                                },
-                                                contentDescription = null,
-                                            )
+                                        imageVector = if (isExpanded) {
+                                            Icons.Default.ExpandLess
+                                        } else {
+                                            Icons.Default.ExpandMore
                                         },
                                     )
-                                    AssistChip(
+                                    KaraMemoActionIconButton(
                                         onClick = { deleteTarget = playlist },
-                                        label = { Text(stringResource(R.string.action_delete)) },
-                                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                                        contentDescription = stringResource(R.string.action_delete),
+                                        imageVector = Icons.Default.Delete,
+                                        iconTint = MaterialTheme.colorScheme.error,
                                     )
                                 }
 
@@ -184,14 +169,17 @@ fun PlaylistListScreen(
             AdBanner()
         }
 
-        ExtendedFloatingActionButton(
+        FloatingActionButton(
             onClick = onAddPlaylist,
-            text = { Text(stringResource(R.string.action_add_playlist)) },
-            icon = { Icon(Icons.Default.Add, contentDescription = null) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp),
-        )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = stringResource(R.string.action_add_playlist),
+            )
+        }
     }
 
     deleteTarget?.let { playlist ->

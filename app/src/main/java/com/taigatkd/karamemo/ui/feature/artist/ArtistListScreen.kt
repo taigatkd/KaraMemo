@@ -18,10 +18,9 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.AdBanner
+import com.taigatkd.karamemo.ui.components.KaraMemoActionIconButton
 import com.taigatkd.karamemo.ui.feature.song.SongItemRow
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
@@ -98,59 +98,43 @@ fun ArtistListScreen(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    AssistChip(
+                                    KaraMemoActionIconButton(
                                         onClick = { onTogglePin(artist) },
-                                        label = {
-                                            Text(
-                                                if (pinnedArtists.contains(artist)) {
-                                                    stringResource(R.string.action_unpin)
-                                                } else {
-                                                    stringResource(R.string.action_pin)
-                                                },
-                                            )
+                                        contentDescription = if (pinnedArtists.contains(artist)) {
+                                            stringResource(R.string.action_unpin)
+                                        } else {
+                                            stringResource(R.string.action_pin)
                                         },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = if (pinnedArtists.contains(artist)) {
-                                                    Icons.Default.PushPin
-                                                } else {
-                                                    Icons.Outlined.PushPin
-                                                },
-                                                contentDescription = null,
-                                            )
+                                        imageVector = if (pinnedArtists.contains(artist)) {
+                                            Icons.Default.PushPin
+                                        } else {
+                                            Icons.Outlined.PushPin
                                         },
+                                        iconTint = MaterialTheme.colorScheme.primary,
                                     )
-                                    AssistChip(
+                                    KaraMemoActionIconButton(
                                         onClick = { onAddSongForArtist(artist) },
-                                        label = { Text(stringResource(R.string.action_add_song_to_artist)) },
-                                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
+                                        contentDescription = stringResource(R.string.action_add_song_to_artist),
+                                        imageVector = Icons.Default.Add,
                                     )
-                                    AssistChip(
+                                    KaraMemoActionIconButton(
                                         onClick = { expandedArtists[artist] = !isExpanded },
-                                        label = {
-                                            Text(
-                                                if (isExpanded) {
-                                                    stringResource(R.string.action_hide_songs)
-                                                } else {
-                                                    stringResource(R.string.action_show_songs)
-                                                },
-                                            )
+                                        contentDescription = if (isExpanded) {
+                                            stringResource(R.string.action_hide_songs)
+                                        } else {
+                                            stringResource(R.string.action_show_songs)
                                         },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = if (isExpanded) {
-                                                    Icons.Default.ExpandLess
-                                                } else {
-                                                    Icons.Default.ExpandMore
-                                                },
-                                                contentDescription = null,
-                                            )
+                                        imageVector = if (isExpanded) {
+                                            Icons.Default.ExpandLess
+                                        } else {
+                                            Icons.Default.ExpandMore
                                         },
                                     )
-                                    AssistChip(
+                                    KaraMemoActionIconButton(
                                         onClick = { deleteTarget = artist },
-                                        label = { Text(stringResource(R.string.action_delete)) },
-                                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                                        contentDescription = stringResource(R.string.action_delete),
+                                        imageVector = Icons.Default.Delete,
+                                        iconTint = MaterialTheme.colorScheme.error,
                                     )
                                 }
 
@@ -176,14 +160,17 @@ fun ArtistListScreen(
             AdBanner()
         }
 
-        ExtendedFloatingActionButton(
+        FloatingActionButton(
             onClick = onAddArtist,
-            text = { Text(stringResource(R.string.action_add_artist)) },
-            icon = { Icon(Icons.Default.Add, contentDescription = null) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp),
-        )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = stringResource(R.string.action_add_artist),
+            )
+        }
     }
 
     deleteTarget?.let { artist ->
