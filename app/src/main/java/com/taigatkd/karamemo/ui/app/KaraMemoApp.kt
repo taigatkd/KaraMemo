@@ -3,10 +3,12 @@ package com.taigatkd.karamemo.ui.app
 import android.app.Activity
 import android.content.ContextWrapper
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -24,6 +27,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -36,11 +40,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.taigatkd.karamemo.R
@@ -76,9 +83,6 @@ fun KaraMemoApp(
     val activity = LocalContext.current.findActivity()
     val noSongsMessage = stringResource(R.string.snackbar_no_songs)
     val billingUnavailableMessage = stringResource(R.string.message_billing_unavailable)
-    val playlistNamesById = remember(uiState.playlists) {
-        uiState.playlists.associate { playlist -> playlist.id to playlist.name }
-    }
     val backgroundBrush = remember(colorScheme) {
         Brush.verticalGradient(
             listOf(
@@ -133,6 +137,11 @@ fun KaraMemoApp(
         }
     }
 
+    LaunchedEffect(adMobManager) {
+        withFrameNanos { }
+        adMobManager.initialize()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -160,55 +169,67 @@ fun KaraMemoApp(
                 )
             },
             bottomBar = {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+                    shadowElevation = 10.dp,
                     tonalElevation = 0.dp,
                 ) {
-                    NavigationBarItem(
-                        selected = selectedTab == AppTab.ARTISTS,
-                        onClick = {
-                            if (selectedTab != AppTab.ARTISTS) {
-                                selectedTab = AppTab.ARTISTS
-                                viewModel.onNaturalBreak(NaturalBreakPoint.TAB_SWITCHED)
-                            }
-                        },
-                        icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                        label = { Text(stringResource(R.string.tab_artists)) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                        ),
-                    )
-                    NavigationBarItem(
-                        selected = selectedTab == AppTab.SONGS,
-                        onClick = {
-                            if (selectedTab != AppTab.SONGS) {
-                                selectedTab = AppTab.SONGS
-                                viewModel.onNaturalBreak(NaturalBreakPoint.TAB_SWITCHED)
-                            }
-                        },
-                        icon = { Icon(Icons.Default.LibraryMusic, contentDescription = null) },
-                        label = { Text(stringResource(R.string.tab_songs)) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                        ),
-                    )
-                    NavigationBarItem(
-                        selected = selectedTab == AppTab.PLAYLISTS,
-                        onClick = {
-                            if (selectedTab != AppTab.PLAYLISTS) {
-                                selectedTab = AppTab.PLAYLISTS
-                                viewModel.onNaturalBreak(NaturalBreakPoint.TAB_SWITCHED)
-                            }
-                        },
-                        icon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
-                        label = { Text(stringResource(R.string.tab_playlists)) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                        ),
-                    )
+                    Column {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+                            thickness = 1.dp,
+                        )
+                        NavigationBar(
+                            containerColor = Color.Transparent,
+                            tonalElevation = 0.dp,
+                        ) {
+                            NavigationBarItem(
+                                selected = selectedTab == AppTab.ARTISTS,
+                                onClick = {
+                                    if (selectedTab != AppTab.ARTISTS) {
+                                        selectedTab = AppTab.ARTISTS
+                                        viewModel.onNaturalBreak(NaturalBreakPoint.TAB_SWITCHED)
+                                    }
+                                },
+                                icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                                label = { Text(stringResource(R.string.tab_artists)) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                ),
+                            )
+                            NavigationBarItem(
+                                selected = selectedTab == AppTab.SONGS,
+                                onClick = {
+                                    if (selectedTab != AppTab.SONGS) {
+                                        selectedTab = AppTab.SONGS
+                                        viewModel.onNaturalBreak(NaturalBreakPoint.TAB_SWITCHED)
+                                    }
+                                },
+                                icon = { Icon(Icons.Default.LibraryMusic, contentDescription = null) },
+                                label = { Text(stringResource(R.string.tab_songs)) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                ),
+                            )
+                            NavigationBarItem(
+                                selected = selectedTab == AppTab.PLAYLISTS,
+                                onClick = {
+                                    if (selectedTab != AppTab.PLAYLISTS) {
+                                        selectedTab = AppTab.PLAYLISTS
+                                        viewModel.onNaturalBreak(NaturalBreakPoint.TAB_SWITCHED)
+                                    }
+                                },
+                                icon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
+                                label = { Text(stringResource(R.string.tab_playlists)) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                ),
+                            )
+                        }
+                    }
                 }
             },
         ) { innerPadding ->
@@ -255,7 +276,10 @@ fun KaraMemoApp(
                             }
                         }
                     },
-                    onOpenSettings = { settingsPage = SettingsPage.ROOT },
+                    onOpenSettings = {
+                        viewModel.startBilling()
+                        settingsPage = SettingsPage.ROOT
+                    },
                     onAddSong = {
                         songEditorRequest = SongEditorRequest()
                     },
@@ -304,17 +328,27 @@ fun KaraMemoApp(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SongSortType.entries.forEach { type ->
-                        Row {
+                        val onSelect = {
+                            viewModel.setSortType(type)
+                            showSortDialog = false
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    role = Role.RadioButton,
+                                    onClick = onSelect,
+                                )
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             RadioButton(
                                 selected = uiState.sortType == type,
-                                onClick = {
-                                    viewModel.setSortType(type)
-                                    showSortDialog = false
-                                },
+                                onClick = onSelect,
                             )
                             Text(
                                 text = stringResource(type.labelRes()),
-                                modifier = Modifier.padding(top = 16.dp),
+                                modifier = Modifier.padding(start = 4.dp),
                             )
                         }
                     }
@@ -412,7 +446,6 @@ fun KaraMemoApp(
     randomSongs?.let { songs ->
         RandomSongsSheet(
             songs = songs,
-            playlistNamesById = playlistNamesById,
             onEditSong = { song ->
                 randomSongs = null
                 songEditorRequest = SongEditorRequest(song = song)
@@ -476,6 +509,7 @@ private fun SongSortType.labelRes(): Int =
         SongSortType.DATE_ASC -> R.string.sort_oldest_first
         SongSortType.TITLE_ASC -> R.string.sort_title_order
         SongSortType.FAVORITE -> R.string.sort_favorites_first
+        SongSortType.SCORE_DESC -> R.string.sort_score_highest_first
     }
 
 private fun android.content.Context.findActivity(): Activity? {

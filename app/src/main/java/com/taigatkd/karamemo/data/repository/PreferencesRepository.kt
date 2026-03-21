@@ -10,8 +10,10 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.taigatkd.karamemo.ads.MonetizationPolicy
+import com.taigatkd.karamemo.domain.model.MAX_KARAOKE_MACHINE_SETTING
 import com.taigatkd.karamemo.domain.model.KaraokeMachine
 import com.taigatkd.karamemo.domain.model.KaraokeMachineSettings
+import com.taigatkd.karamemo.domain.model.MIN_KARAOKE_MACHINE_SETTING
 import com.taigatkd.karamemo.domain.model.SongSortType
 import com.taigatkd.karamemo.domain.model.defaultMachineSettings
 import kotlinx.coroutines.flow.Flow
@@ -54,8 +56,15 @@ interface PreferencesRepository {
 class PreferencesRepositoryImpl(
     private val context: Context,
 ) : PreferencesRepository {
+    private companion object {
+        const val MACHINE_SETTINGS_VERSION_LEGACY_50 = 1
+        const val MACHINE_SETTINGS_VERSION_100 = 2
+        const val MACHINE_SETTINGS_VERSION_CURRENT = 3
+    }
+
     private object Keys {
         val currentMachine = stringPreferencesKey("current_machine")
+        val machineSettingsVersion = intPreferencesKey("machine_settings_version")
         val pinnedArtists = stringSetPreferencesKey("pinned_artists")
         val pinnedPlaylists = stringSetPreferencesKey("pinned_playlists")
         val lastUsedArtist = stringPreferencesKey("last_used_artist")
@@ -81,12 +90,13 @@ class PreferencesRepositoryImpl(
 
     override val machineSettings: Flow<Map<KaraokeMachine, KaraokeMachineSettings>> =
         context.karaMemoDataStore.data.map { prefs ->
+            val machineSettingsVersion = prefs[Keys.machineSettingsVersion] ?: MACHINE_SETTINGS_VERSION_LEGACY_50
             defaultMachineSettings().mapValues { (machine, defaults) ->
                 KaraokeMachineSettings(
-                    bgm = prefs[Keys.bgm(machine)] ?: defaults.bgm,
-                    mic = prefs[Keys.mic(machine)] ?: defaults.mic,
-                    echo = prefs[Keys.echo(machine)] ?: defaults.echo,
-                    music = prefs[Keys.music(machine)] ?: defaults.music,
+                    bgm = prefs[Keys.bgm(machine)].resolveMachineSetting(defaults.bgm, machineSettingsVersion),
+                    mic = prefs[Keys.mic(machine)].resolveMachineSetting(defaults.mic, machineSettingsVersion),
+                    echo = prefs[Keys.echo(machine)].resolveMachineSetting(defaults.echo, machineSettingsVersion),
+                    music = prefs[Keys.music(machine)].resolveMachineSetting(defaults.music, machineSettingsVersion),
                 )
             }
         }
@@ -130,6 +140,7 @@ class PreferencesRepositoryImpl(
             prefs[Keys.mic(machine)] = settings.mic
             prefs[Keys.echo(machine)] = settings.echo
             prefs[Keys.music(machine)] = settings.music
+            prefs[Keys.machineSettingsVersion] = MACHINE_SETTINGS_VERSION_CURRENT
         }
     }
 
@@ -221,5 +232,17 @@ class PreferencesRepositoryImpl(
             prefs[Keys.pendingInterstitial] = false
             prefs[Keys.lastInterstitialShownAt] = shownAtEpochMillis
         }
+    }
+
+    private fun Int?.resolveMachineSetting(
+        defaultValue: Int,
+        machineSettingsVersion: Int,
+    ): Int {
+        val rawValue = this ?: return defaultValue
+        val normalizedValue = when (machineSettingsVersion) {
+            MACHINE_SETTINGS_VERSION_100 -> rawValue / 2
+            else -> rawValue
+        }
+        return normalizedValue.coerceIn(MIN_KARAOKE_MACHINE_SETTING, MAX_KARAOKE_MACHINE_SETTING)
     }
 }

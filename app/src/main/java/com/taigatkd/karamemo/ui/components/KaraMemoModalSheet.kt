@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 fun KaraMemoModalSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    sheetGesturesEnabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -27,6 +28,7 @@ fun KaraMemoModalSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
+        sheetGesturesEnabled = sheetGesturesEnabled,
         containerColor = MaterialTheme.colorScheme.surface,
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {

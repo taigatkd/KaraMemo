@@ -69,6 +69,36 @@ class KaraMemoViewModelTest {
     }
 
     @Test
+    fun filteredSongs_sortsScoreDescendingAndPlacesUnscoredLast() = runTest {
+        val songRepository = FakeSongRepository(
+            listOf(
+                song(id = "1", artist = "Aimer", title = "Ref:rain", createdAt = 1, score = 88.4),
+                song(id = "2", artist = "Ado", title = "Show", createdAt = 2, score = null),
+                song(id = "3", artist = "YOASOBI", title = "Idol", createdAt = 3, score = 94.2),
+                song(id = "4", artist = "Utada", title = "First Love", createdAt = 4, score = 94.2),
+            ),
+        )
+        val viewModel = KaraMemoViewModel(
+            songRepository = songRepository,
+            playlistRepository = FakePlaylistRepository(),
+            preferencesRepository = FakePreferencesRepository(),
+            billingRepository = FakeBillingRepository(),
+            stringResolver = FakeStringResolver(),
+        )
+
+        val collector = launch { viewModel.uiState.collect {} }
+        advanceUntilIdle()
+
+        viewModel.setSortType(SongSortType.SCORE_DESC)
+        advanceUntilIdle()
+
+        val filtered = viewModel.filteredSongs(songRepository.currentSongs())
+
+        assertEquals(listOf("First Love", "Idol", "Ref:rain", "Show"), filtered.map { it.title })
+        collector.cancel()
+    }
+
+    @Test
     fun saveSong_rejectsDuplicateIgnoringCase() = runTest {
         val songRepository = FakeSongRepository(
             listOf(song(id = "1", artist = "Aimer", title = "Ref:rain")),

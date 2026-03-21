@@ -63,6 +63,7 @@
     <string name="sort_oldest_first">古い順</string>
     <string name="sort_title_order">タイトル順</string>
     <string name="sort_favorites_first">お気に入り優先</string>
+    <string name="sort_score_highest_first">点数が高い順</string>
 
     <string name="label_search_song">アーティスト名または曲名で検索</string>
     <string name="label_artist_name">アーティスト名</string>

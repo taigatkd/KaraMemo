@@ -175,7 +175,6 @@ class KaraMemoViewModel(
                 handleBillingEvent(event)
             }
         }
-        startBilling()
     }
 
     fun setSearchQuery(query: String) {
@@ -432,6 +431,11 @@ class KaraMemoViewModel(
             SongSortType.TITLE_ASC -> filtered.sortedBy { it.title.lowercase() }
             SongSortType.FAVORITE -> filtered.sortedWith(
                 compareByDescending<Song> { it.isFavorite }.thenByDescending { it.createdAt },
+            )
+            SongSortType.SCORE_DESC -> filtered.sortedWith(
+                compareByDescending<Song> { it.score != null }
+                    .thenByDescending { it.score ?: Double.NEGATIVE_INFINITY }
+                    .thenByDescending { it.createdAt },
             )
         }
     }

@@ -21,7 +21,6 @@ class AdMobManager(
         if (!BuildConfig.ADS_ENABLED || initialized) return
         MobileAds.initialize(context) {}
         initialized = true
-        preloadInterstitial()
     }
 
     fun preloadInterstitial() {

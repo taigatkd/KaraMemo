@@ -22,7 +22,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        adMobManager.initialize()
         enableEdgeToEdge()
         setContent {
             KaraMemoTheme(useDynamicColor = false) {
@@ -32,10 +31,5 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.refreshBilling()
     }
 }

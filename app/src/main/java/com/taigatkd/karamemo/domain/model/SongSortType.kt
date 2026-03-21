@@ -5,5 +5,5 @@ enum class SongSortType {
     DATE_ASC,
     TITLE_ASC,
     FAVORITE,
+    SCORE_DESC,
 }
-

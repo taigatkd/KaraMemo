@@ -63,6 +63,7 @@
     <string name="sort_oldest_first">Oldest first</string>
     <string name="sort_title_order">Title order</string>
     <string name="sort_favorites_first">Favorites first</string>
+    <string name="sort_score_highest_first">Highest score first</string>
 
     <string name="label_search_song">Search by artist or title</string>
     <string name="label_artist_name">Artist name</string>

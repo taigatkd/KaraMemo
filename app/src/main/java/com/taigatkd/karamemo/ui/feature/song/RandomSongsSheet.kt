@@ -18,7 +18,6 @@ import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 @Composable
 fun RandomSongsSheet(
     songs: List<Song>,
-    playlistNamesById: Map<String, String>,
     onEditSong: (Song) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -31,7 +30,6 @@ fun RandomSongsSheet(
             items(songs, key = { it.id }) { song ->
                 SongItemRow(
                     song = song,
-                    playlistName = song.playlistId?.let(playlistNamesById::get),
                     onEdit = onEditSong,
                     onDelete = {},
                     onToggleFavorite = {},
@@ -48,7 +46,6 @@ private fun RandomSongsSheetPreview() {
     KaraMemoTheme {
         RandomSongsSheet(
             songs = PreviewFixtures.songs,
-            playlistNamesById = PreviewFixtures.playlistNamesById,
             onEditSong = {},
             onDismiss = {},
         )
