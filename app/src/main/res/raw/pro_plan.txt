@@ -1,0 +1,21 @@
+KaraokeMemo Pro
+
+Current plan structure
+
+Free plan
+- Up to 75 songs
+- Ads may be shown
+
+Pro plan
+- One-time purchase: JPY 480
+- Unlimited songs
+- Ad-free experience
+
+Notes
+- Pro is a one-time product that unlocks permanent benefits in this app.
+- Pricing shown in Google Play at the time of purchase takes precedence if local taxes or display rules require a different presentation.
+- Purchase processing, payment methods, receipts, refunds, and family sharing availability are handled by Google Play according to Google Play policies and the user's region.
+
+When you may want Pro
+- You manage a large karaoke library and want to save more than 75 songs.
+- You want to remove ads while using the app.

@@ -3,9 +3,8 @@ package com.taigatkd.karamemo.ui.feature.song
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,11 +14,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,11 +36,10 @@ import com.taigatkd.karamemo.ui.components.KaraMemoActionIconButton
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SongListScreen(
     songs: List<Song>,
-    playlistNamesById: Map<String, String>,
+    showAds: Boolean,
     query: String,
     showSearchBar: Boolean,
     onQueryChange: (String) -> Unit,
@@ -60,12 +57,12 @@ fun SongListScreen(
         modifier = modifier.fillMaxSize(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            FlowRow(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 KaraMemoActionIconButton(
                     onClick = onToggleSearch,
@@ -86,12 +83,10 @@ fun SongListScreen(
                     contentDescription = stringResource(R.string.action_random),
                     imageVector = Icons.Default.Shuffle,
                 )
-                ElevatedAssistChip(
+                KaraMemoActionIconButton(
                     onClick = onOpenSettings,
-                    label = { Text(stringResource(R.string.action_settings)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.GraphicEq, contentDescription = null)
-                    },
+                    contentDescription = stringResource(R.string.action_settings),
+                    imageVector = Icons.Default.Settings,
                 )
             }
 
@@ -112,22 +107,23 @@ fun SongListScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(songs, key = { it.id }) { song ->
                         SongItemRow(
                             song = song,
-                            playlistName = song.playlistId?.let(playlistNamesById::get),
                             onEdit = onEditSong,
                             onDelete = onDeleteSong,
                             onToggleFavorite = onToggleFavorite,
+                            enableSwipeToDelete = true,
+                            compactMetadata = true,
                         )
                     }
                 }
             }
 
-            AdBanner()
+            AdBanner(showAd = showAds)
         }
 
         FloatingActionButton(
@@ -176,7 +172,7 @@ private fun SongListScreenPreview() {
     KaraMemoTheme {
         SongListScreen(
             songs = PreviewFixtures.songs,
-            playlistNamesById = PreviewFixtures.playlistNamesById,
+            showAds = true,
             query = "a",
             showSearchBar = true,
             onQueryChange = {},

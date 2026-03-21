@@ -1,0 +1,27 @@
+Terms of Use
+
+These terms apply to your use of KaraokeMemo.
+
+1. License
+The app is provided for personal use. You may use the app to manage your own karaoke song lists and related notes.
+
+2. Your content
+You are responsible for the song names, memos, and other content you enter into the app. Please do not enter unlawful content or content that you do not have the right to use.
+
+3. Free and Pro plans
+The free plan allows storage of up to 75 songs. The Pro plan is a one-time purchase priced at JPY 480 and unlocks unlimited songs and an ad-free experience. Final pricing, taxes, refunds, and billing handling are subject to Google Play rules and the user's region.
+
+4. Availability
+The app may change over time. Features can be added, modified, suspended, or removed. The developer does not guarantee uninterrupted availability of all features.
+
+5. No warranty
+The app is provided on an as-is basis to the extent permitted by applicable law. The developer does not promise that the app will always be error-free or meet every user's expectations.
+
+6. Limitation
+To the extent permitted by applicable law, the developer is not liable for indirect, incidental, or consequential damages arising from use of the app.
+
+7. Changes to the terms
+These terms may be updated when the app changes or legal requirements require it. Continued use of the app after changes take effect means you accept the updated terms.
+
+8. Contact
+For contact information, please refer to the developer information shown in the Google Play listing for KaraokeMemo.

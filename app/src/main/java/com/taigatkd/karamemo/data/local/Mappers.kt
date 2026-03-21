@@ -14,6 +14,7 @@ fun SongEntity.toDomain(): Song =
         isFavorite = isFavorite,
         playlistId = playlistId,
         createdAt = Instant.ofEpochMilli(createdAtEpochMillis),
+        score = scoreValue,
     )
 
 fun Song.toEntity(): SongEntity =
@@ -26,6 +27,7 @@ fun Song.toEntity(): SongEntity =
         isFavorite = isFavorite,
         playlistId = playlistId,
         createdAtEpochMillis = createdAt.toEpochMilli(),
+        scoreValue = score,
     )
 
 fun PlaylistEntity.toDomain(): Playlist =
@@ -41,4 +43,3 @@ fun Playlist.toEntity(): PlaylistEntity =
         name = name,
         createdAtEpochMillis = createdAt.toEpochMilli(),
     )
-

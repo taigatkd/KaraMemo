@@ -4,15 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MusicNote
@@ -30,17 +29,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.KaraMemoActionIconButton
+import com.taigatkd.karamemo.ui.components.KaraMemoSwipeToDeleteContainer
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
+import com.taigatkd.karamemo.ui.theme.MidnightStage
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
+import com.taigatkd.karamemo.ui.theme.StageWhite
+import java.math.BigDecimal
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SongItemRow(
     song: Song,
@@ -50,6 +55,9 @@ fun SongItemRow(
     modifier: Modifier = Modifier,
     playlistName: String? = null,
     showActions: Boolean = true,
+    enableSwipeToDelete: Boolean = false,
+    compactMetadata: Boolean = false,
+    showArtistInfo: Boolean = true,
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val favoriteDescription = if (song.isFavorite) {
@@ -57,46 +65,171 @@ fun SongItemRow(
     } else {
         stringResource(R.string.action_favorite)
     }
+    val hasScore = song.score != null
+    val leadingBadgeBackground = if (hasScore) {
+        MidnightStage
+    } else {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+    }
+    val leadingBadgeContent = if (hasScore) {
+        StageWhite
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-    ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val rowContent: @Composable () -> Unit = {
+        Card(
+            onClick = { onEdit(song) },
+            modifier = modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = if (compactMetadata) 10.dp else 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
                 Box(
                     modifier = Modifier
                         .background(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                            color = leadingBadgeBackground,
                             shape = CircleShape,
                         )
-                        .padding(12.dp),
+                        .size(38.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
+                    song.score?.let { score ->
+                        Text(
+                            text = formatScore(score),
+                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp),
+                            fontWeight = FontWeight.ExtraBold,
+                            color = leadingBadgeContent,
+                            maxLines = 1,
+                        )
+                    } ?: Icon(
                         imageVector = Icons.Default.MusicNote,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = leadingBadgeContent,
+                        modifier = Modifier.size(18.dp),
                     )
                 }
 
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(if (compactMetadata) 5.dp else 6.dp),
+                ) {
                     Text(
                         text = song.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                    Text(
-                        text = song.artist,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+
+                    if (compactMetadata) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            if (showArtistInfo) {
+                                MetadataBadge(
+                                    text = song.artist,
+                                    textColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
+                                )
+                            }
+
+                            if (song.key != 0) {
+                                MetadataBadge(
+                                    text = stringResource(R.string.label_key, signedKey(song.key)),
+                                    textColor = MaterialTheme.colorScheme.primary,
+                                    backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                                )
+                            }
+
+                            playlistName?.let { name ->
+                                MetadataBadge(
+                                    text = name,
+                                    textColor = MaterialTheme.colorScheme.secondary,
+                                    backgroundColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.10f),
+                                )
+                            }
+                        }
+                    } else {
+                        if (showArtistInfo) {
+                            Text(
+                                text = song.artist,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            if (song.key != 0) {
+                                MetadataBadge(
+                                    text = stringResource(R.string.label_key, signedKey(song.key)),
+                                    textColor = MaterialTheme.colorScheme.primary,
+                                    backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                                )
+                            }
+
+                            playlistName?.let { name ->
+                                MetadataBadge(
+                                    text = name,
+                                    textColor = MaterialTheme.colorScheme.secondary,
+                                    backgroundColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.10f),
+                                )
+                            }
+                        }
+                    }
+
+                    if (song.memo.isNotBlank()) {
+                        Text(
+                            text = song.memo,
+                            style = if (compactMetadata) {
+                                MaterialTheme.typography.labelMedium
+                            } else {
+                                MaterialTheme.typography.bodySmall
+                            },
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
 
-                if (song.isFavorite) {
+                if (showActions) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        KaraMemoActionIconButton(
+                            onClick = { onToggleFavorite(song) },
+                            contentDescription = favoriteDescription,
+                            imageVector = if (song.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            iconTint = if (song.isFavorite) {
+                                MaterialTheme.colorScheme.secondary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                        )
+                        if (!enableSwipeToDelete) {
+                            KaraMemoActionIconButton(
+                                onClick = { showDeleteDialog = true },
+                                contentDescription = stringResource(R.string.action_delete),
+                                imageVector = Icons.Default.Delete,
+                                iconTint = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                } else if (song.isFavorite) {
                     Icon(
                         imageVector = Icons.Default.Favorite,
                         contentDescription = null,
@@ -104,77 +237,17 @@ fun SongItemRow(
                     )
                 }
             }
-
-            if (song.memo.isNotBlank()) {
-                Text(
-                    text = song.memo,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                if (song.key != 0) {
-                    Text(
-                        text = stringResource(R.string.label_key, signedKey(song.key)),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                                MaterialTheme.shapes.small,
-                            )
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                    )
-                }
-
-                playlistName?.let { name ->
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.10f),
-                                MaterialTheme.shapes.small,
-                            )
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                    )
-                }
-            }
-
-            if (showActions) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    KaraMemoActionIconButton(
-                        onClick = { onEdit(song) },
-                        contentDescription = stringResource(R.string.action_edit),
-                        imageVector = Icons.Default.Edit,
-                    )
-                    KaraMemoActionIconButton(
-                        onClick = { onToggleFavorite(song) },
-                        contentDescription = favoriteDescription,
-                        imageVector = if (song.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        iconTint = if (song.isFavorite) {
-                            MaterialTheme.colorScheme.secondary
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
-                    )
-                    KaraMemoActionIconButton(
-                        onClick = { showDeleteDialog = true },
-                        contentDescription = stringResource(R.string.action_delete),
-                        imageVector = Icons.Default.Delete,
-                        iconTint = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
         }
+    }
+
+    if (enableSwipeToDelete && showActions) {
+        KaraMemoSwipeToDeleteContainer(
+            modifier = modifier,
+            onDeleteRequested = { showDeleteDialog = true },
+            content = rowContent,
+        )
+    } else {
+        rowContent()
     }
 
     if (showActions && showDeleteDialog) {
@@ -201,7 +274,31 @@ fun SongItemRow(
     }
 }
 
+@Composable
+private fun MetadataBadge(
+    text: String,
+    textColor: Color,
+    backgroundColor: Color,
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = textColor,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .background(
+                backgroundColor,
+                MaterialTheme.shapes.small,
+            )
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+    )
+}
+
 private fun signedKey(value: Int): String = if (value > 0) "+$value" else value.toString()
+
+private fun formatScore(value: Double): String =
+    BigDecimal.valueOf(value).stripTrailingZeros().toPlainString()
 
 @Preview(showBackground = true)
 @Composable

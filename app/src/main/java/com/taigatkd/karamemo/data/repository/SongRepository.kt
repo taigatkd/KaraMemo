@@ -47,4 +47,3 @@ class SongRepositoryImpl(
     override suspend fun getRandomSongs(count: Int): List<Song> =
         observeSongs().first().shuffled().take(count)
 }
-

@@ -1,5 +1,7 @@
 package com.taigatkd.karamemo.ui.app
 
+import android.app.Activity
+import android.content.ContextWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,19 +39,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.taigatkd.karamemo.R
+import com.taigatkd.karamemo.ads.AdMobManager
+import com.taigatkd.karamemo.ads.NaturalBreakPoint
 import com.taigatkd.karamemo.domain.model.Playlist
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.domain.model.SongSortType
-import com.taigatkd.karamemo.ui.feature.artist.ArtistAddSheet
 import com.taigatkd.karamemo.ui.feature.artist.ArtistListScreen
 import com.taigatkd.karamemo.ui.feature.playlist.PlaylistAddSheet
 import com.taigatkd.karamemo.ui.feature.playlist.PlaylistListScreen
 import com.taigatkd.karamemo.ui.feature.playlist.PlaylistSongPickerSheet
 import com.taigatkd.karamemo.ui.feature.settings.KaraokeSettingsSheet
+import com.taigatkd.karamemo.ui.feature.settings.SettingsPage
+import com.taigatkd.karamemo.ui.feature.settings.SettingsBillingUi
+import com.taigatkd.karamemo.ui.feature.settings.SettingsScreen
 import com.taigatkd.karamemo.ui.feature.song.RandomSongsSheet
 import com.taigatkd.karamemo.ui.feature.song.SongEditorRequest
 import com.taigatkd.karamemo.ui.feature.song.SongEditorSheet
@@ -60,12 +67,15 @@ import kotlinx.coroutines.launch
 @Composable
 fun KaraMemoApp(
     viewModel: KaraMemoViewModel,
+    adMobManager: AdMobManager,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val colorScheme = MaterialTheme.colorScheme
+    val activity = LocalContext.current.findActivity()
     val noSongsMessage = stringResource(R.string.snackbar_no_songs)
+    val billingUnavailableMessage = stringResource(R.string.message_billing_unavailable)
     val playlistNamesById = remember(uiState.playlists) {
         uiState.playlists.associate { playlist -> playlist.id to playlist.name }
     }
@@ -82,16 +92,44 @@ fun KaraMemoApp(
     var selectedTab by rememberSaveable { mutableStateOf(AppTab.SONGS) }
     var showSearchBar by rememberSaveable { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
-    var showArtistAddSheet by remember { mutableStateOf(false) }
     var showPlaylistAddSheet by remember { mutableStateOf(false) }
-    var showSettingsSheet by remember { mutableStateOf(false) }
+    var showKaraokeSettingsSheet by remember { mutableStateOf(false) }
+    var settingsPage by remember { mutableStateOf<SettingsPage?>(null) }
+    var showUpgradeDialog by remember { mutableStateOf(false) }
     var randomSongs by remember { mutableStateOf<List<Song>?>(null) }
     var songEditorRequest by remember { mutableStateOf<SongEditorRequest?>(null) }
     var pickerPlaylist by remember { mutableStateOf<Playlist?>(null) }
+    var pendingBreakPoint by remember { mutableStateOf<NaturalBreakPoint?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.snackbarMessages.collect { message ->
             snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.upgradePrompts.collect {
+            showUpgradeDialog = true
+        }
+    }
+
+    LaunchedEffect(pendingBreakPoint) {
+        val breakPoint = pendingBreakPoint ?: return@LaunchedEffect
+        viewModel.onNaturalBreak(breakPoint)
+        pendingBreakPoint = null
+    }
+
+    LaunchedEffect(viewModel, adMobManager, activity) {
+        val targetActivity = activity ?: return@LaunchedEffect
+        viewModel.interstitialRequests.collect {
+            val shown = adMobManager.showInterstitialIfAvailable(
+                activity = targetActivity,
+                onShown = viewModel::onInterstitialShown,
+                onUnavailable = viewModel::onInterstitialNotShown,
+            )
+            if (!shown) {
+                viewModel.onInterstitialNotShown()
+            }
         }
     }
 
@@ -109,9 +147,9 @@ fun KaraMemoApp(
                     title = {
                         Text(
                             text = when (selectedTab) {
-                                AppTab.ARTISTS -> stringResource(R.string.tab_artists)
-                                AppTab.SONGS -> stringResource(R.string.tab_songs)
-                                AppTab.PLAYLISTS -> stringResource(R.string.tab_playlists)
+                                AppTab.ARTISTS -> stringResource(R.string.title_artist_list_screen)
+                                AppTab.SONGS -> stringResource(R.string.title_song_list_screen)
+                                AppTab.PLAYLISTS -> stringResource(R.string.title_playlist_list_screen)
                             },
                         )
                     },
@@ -128,7 +166,12 @@ fun KaraMemoApp(
                 ) {
                     NavigationBarItem(
                         selected = selectedTab == AppTab.ARTISTS,
-                        onClick = { selectedTab = AppTab.ARTISTS },
+                        onClick = {
+                            if (selectedTab != AppTab.ARTISTS) {
+                                selectedTab = AppTab.ARTISTS
+                                viewModel.onNaturalBreak(NaturalBreakPoint.TAB_SWITCHED)
+                            }
+                        },
                         icon = { Icon(Icons.Default.Person, contentDescription = null) },
                         label = { Text(stringResource(R.string.tab_artists)) },
                         colors = NavigationBarItemDefaults.colors(
@@ -138,7 +181,12 @@ fun KaraMemoApp(
                     )
                     NavigationBarItem(
                         selected = selectedTab == AppTab.SONGS,
-                        onClick = { selectedTab = AppTab.SONGS },
+                        onClick = {
+                            if (selectedTab != AppTab.SONGS) {
+                                selectedTab = AppTab.SONGS
+                                viewModel.onNaturalBreak(NaturalBreakPoint.TAB_SWITCHED)
+                            }
+                        },
                         icon = { Icon(Icons.Default.LibraryMusic, contentDescription = null) },
                         label = { Text(stringResource(R.string.tab_songs)) },
                         colors = NavigationBarItemDefaults.colors(
@@ -148,7 +196,12 @@ fun KaraMemoApp(
                     )
                     NavigationBarItem(
                         selected = selectedTab == AppTab.PLAYLISTS,
-                        onClick = { selectedTab = AppTab.PLAYLISTS },
+                        onClick = {
+                            if (selectedTab != AppTab.PLAYLISTS) {
+                                selectedTab = AppTab.PLAYLISTS
+                                viewModel.onNaturalBreak(NaturalBreakPoint.TAB_SWITCHED)
+                            }
+                        },
                         icon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
                         label = { Text(stringResource(R.string.tab_playlists)) },
                         colors = NavigationBarItemDefaults.colors(
@@ -163,12 +216,11 @@ fun KaraMemoApp(
                 AppTab.ARTISTS -> ArtistListScreen(
                     modifier = Modifier.padding(innerPadding),
                     songs = uiState.songs,
-                    playlistNamesById = playlistNamesById,
+                    showAds = !uiState.isProEnabled,
                     pinnedArtists = uiState.pinnedArtists,
                     onTogglePin = { artist ->
                         scope.launch { viewModel.toggleArtistPin(artist) }
                     },
-                    onAddArtist = { showArtistAddSheet = true },
                     onAddSongForArtist = { artist ->
                         songEditorRequest = SongEditorRequest(initialArtist = artist)
                     },
@@ -187,7 +239,7 @@ fun KaraMemoApp(
                 AppTab.SONGS -> SongListScreen(
                     modifier = Modifier.padding(innerPadding),
                     songs = viewModel.filteredSongs(),
-                    playlistNamesById = playlistNamesById,
+                    showAds = !uiState.isProEnabled,
                     query = uiState.searchQuery,
                     showSearchBar = showSearchBar,
                     onQueryChange = viewModel::setSearchQuery,
@@ -203,9 +255,9 @@ fun KaraMemoApp(
                             }
                         }
                     },
-                    onOpenSettings = { showSettingsSheet = true },
+                    onOpenSettings = { settingsPage = SettingsPage.ROOT },
                     onAddSong = {
-                        songEditorRequest = SongEditorRequest(initialArtist = uiState.lastUsedArtist)
+                        songEditorRequest = SongEditorRequest()
                     },
                     onEditSong = { song -> songEditorRequest = SongEditorRequest(song = song) },
                     onDeleteSong = { song ->
@@ -220,11 +272,15 @@ fun KaraMemoApp(
                     modifier = Modifier.padding(innerPadding),
                     playlists = uiState.playlists,
                     songs = uiState.songs,
+                    showAds = !uiState.isProEnabled,
                     pinnedPlaylists = uiState.pinnedPlaylists,
                     onTogglePin = { playlistId ->
                         scope.launch { viewModel.togglePlaylistPin(playlistId) }
                     },
                     onAddPlaylist = { showPlaylistAddSheet = true },
+                    onAddSongToPlaylist = { playlist ->
+                        songEditorRequest = SongEditorRequest(initialPlaylistId = playlist.id)
+                    },
                     onOpenPicker = { playlist -> pickerPlaylist = playlist },
                     onEditSong = { song -> songEditorRequest = SongEditorRequest(song = song) },
                     onDeleteSong = { song ->
@@ -272,16 +328,6 @@ fun KaraMemoApp(
         )
     }
 
-    if (showArtistAddSheet) {
-        ArtistAddSheet(
-            onDismiss = { showArtistAddSheet = false },
-            onNext = { artistName ->
-                showArtistAddSheet = false
-                songEditorRequest = SongEditorRequest(initialArtist = artistName)
-            },
-        )
-    }
-
     if (showPlaylistAddSheet) {
         PlaylistAddSheet(
             onDismiss = { showPlaylistAddSheet = false },
@@ -299,9 +345,11 @@ fun KaraMemoApp(
         SongEditorSheet(
             request = request,
             playlists = uiState.playlists,
-            lastUsedArtist = uiState.lastUsedArtist,
-            onDismiss = { songEditorRequest = null },
-            onSave = { artist, title, key, memo, isFavorite, playlistId ->
+            onDismiss = {
+                songEditorRequest = null
+                pendingBreakPoint = NaturalBreakPoint.SONG_EDITOR_DISMISSED
+            },
+            onSave = { artist, title, key, memo, isFavorite, playlistId, score ->
                 viewModel.saveSong(
                     editingSongId = request.song?.id,
                     artist = artist,
@@ -310,16 +358,17 @@ fun KaraMemoApp(
                     memo = memo,
                     isFavorite = isFavorite,
                     playlistId = playlistId,
+                    score = score,
                 )
             },
         )
     }
 
-    if (showSettingsSheet) {
+    if (showKaraokeSettingsSheet) {
         KaraokeSettingsSheet(
             currentMachine = uiState.currentMachine,
             settings = uiState.machineSettings,
-            onDismiss = { showSettingsSheet = false },
+            onDismiss = { showKaraokeSettingsSheet = false },
             onMachineSelected = { machine ->
                 scope.launch { viewModel.setCurrentMachine(machine) }
             },
@@ -329,10 +378,45 @@ fun KaraMemoApp(
         )
     }
 
+    settingsPage?.let { page ->
+        SettingsScreen(
+            page = page,
+            billingUi = SettingsBillingUi(
+                isProEnabled = uiState.isProEnabled,
+                hasRealProPurchase = uiState.hasRealProPurchase,
+                isMockProEnabled = uiState.isMockProEnabled,
+                canUseMockBilling = uiState.canUseMockBilling,
+                isBillingReady = uiState.isBillingReady,
+                isProductAvailable = uiState.isProductAvailable,
+                isPurchaseInProgress = uiState.isPurchaseInProgress,
+                proPriceLabel = uiState.proPriceLabel,
+                currentSongCount = uiState.songs.size,
+                freeSongLimit = uiState.freeSongLimit,
+            ),
+            onDismiss = { settingsPage = null },
+            onOpenKaraokeSettings = { showKaraokeSettingsSheet = true },
+            onOpenPage = { nextPage -> settingsPage = nextPage },
+            onBuyPro = {
+                val targetActivity = activity
+                if (targetActivity == null) {
+                    scope.launch { snackbarHostState.showSnackbar(billingUnavailableMessage) }
+                } else {
+                    viewModel.purchasePro(targetActivity)
+                }
+            },
+            onRestorePurchases = viewModel::restorePurchases,
+            onSetMockProEnabled = viewModel::setMockProEnabled,
+        )
+    }
+
     randomSongs?.let { songs ->
         RandomSongsSheet(
             songs = songs,
             playlistNamesById = playlistNamesById,
+            onEditSong = { song ->
+                randomSongs = null
+                songEditorRequest = SongEditorRequest(song = song)
+            },
             onDismiss = { randomSongs = null },
         )
     }
@@ -341,11 +425,45 @@ fun KaraMemoApp(
         PlaylistSongPickerSheet(
             playlist = playlist,
             songs = uiState.songs,
-            onDismiss = { pickerPlaylist = null },
+            onDismiss = {
+                pickerPlaylist = null
+                pendingBreakPoint = NaturalBreakPoint.PLAYLIST_PICKER_DISMISSED
+            },
             onSave = { selectedSongIds ->
                 scope.launch {
                     viewModel.updatePlaylistMembership(playlist.id, selectedSongIds)
                     pickerPlaylist = null
+                    pendingBreakPoint = NaturalBreakPoint.PLAYLIST_PICKER_DISMISSED
+                }
+            },
+        )
+    }
+
+    if (showUpgradeDialog) {
+        AlertDialog(
+            onDismissRequest = { showUpgradeDialog = false },
+            title = { Text(stringResource(R.string.title_song_limit_reached)) },
+            text = {
+                Text(
+                    text = stringResource(
+                        R.string.message_song_limit_dialog,
+                        uiState.freeSongLimit,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showUpgradeDialog = false
+                        settingsPage = SettingsPage.PRO
+                    },
+                ) {
+                    Text(stringResource(R.string.action_open_pro))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUpgradeDialog = false }) {
+                    Text(stringResource(R.string.action_later))
                 }
             },
         )
@@ -359,3 +477,12 @@ private fun SongSortType.labelRes(): Int =
         SongSortType.TITLE_ASC -> R.string.sort_title_order
         SongSortType.FAVORITE -> R.string.sort_favorites_first
     }
+
+private fun android.content.Context.findActivity(): Activity? {
+    var current = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
+}

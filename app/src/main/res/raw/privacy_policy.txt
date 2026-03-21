@@ -1,0 +1,32 @@
+Privacy Policy
+
+This policy applies to KaraokeMemo.
+
+1. Data stored in the app
+KaraokeMemo stores the following information on your device so that the app can work:
+- song titles, artist names, keys, memos, favorites, and playlist assignments
+- playlists
+- karaoke machine settings
+- pinned artists and playlists
+- sort settings and basic monetization state such as song-count milestones
+
+2. Local storage
+The app is designed primarily as a local storage app. Your karaoke library is stored on your device. The app does not require account registration.
+
+3. Ads
+If ads are enabled, the app uses Google AdMob. Google and its partners may process device identifiers, diagnostic information, and app interaction data for ad delivery, fraud prevention, measurement, and related purposes. Such processing is governed by Google's policies.
+
+4. Payments
+Pro purchases are handled by Google Play Billing. The app may receive purchase status information needed to unlock features, but it does not process or store your full payment card details.
+
+5. Data sharing
+The developer does not sell your karaoke library data. Data entered into the app is not uploaded to a developer-operated server as part of the app's normal operation. Limited data may be processed by Google services used in the app, such as AdMob and Google Play Billing, when those services are active.
+
+6. Backup and deletion
+Depending on your Android device and system settings, app data may be included in device backup features. You can remove local app data by clearing app storage or uninstalling the app.
+
+7. Changes
+This policy may be updated when app features or legal requirements change. The latest version made available in the app or app listing should be treated as the current version.
+
+8. Contact
+For contact information, please refer to the developer information shown in the Google Play listing for KaraokeMemo.

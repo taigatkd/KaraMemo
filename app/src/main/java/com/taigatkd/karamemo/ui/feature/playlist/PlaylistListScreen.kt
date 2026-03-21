@@ -3,25 +3,21 @@ package com.taigatkd.karamemo.ui.feature.playlist
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistAddCheck
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.taigatkd.karamemo.R
@@ -43,18 +40,20 @@ import com.taigatkd.karamemo.domain.model.Playlist
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.AdBanner
 import com.taigatkd.karamemo.ui.components.KaraMemoActionIconButton
+import com.taigatkd.karamemo.ui.components.KaraMemoSwipeToDeleteContainer
 import com.taigatkd.karamemo.ui.feature.song.SongItemRow
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PlaylistListScreen(
     playlists: List<Playlist>,
     songs: List<Song>,
+    showAds: Boolean,
     pinnedPlaylists: Set<String>,
     onTogglePin: (String) -> Unit,
     onAddPlaylist: () -> Unit,
+    onAddSongToPlaylist: (Playlist) -> Unit,
     onOpenPicker: (Playlist) -> Unit,
     onEditSong: (Song) -> Unit,
     onDeleteSong: (Song) -> Unit,
@@ -81,81 +80,112 @@ fun PlaylistListScreen(
                     items(sortedPlaylists, key = { it.id }) { playlist ->
                         val playlistSongs = songs.filter { it.playlistId == playlist.id }
                         val isExpanded = expanded[playlist.id] == true
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        KaraMemoSwipeToDeleteContainer(
+                            onDeleteRequested = { deleteTarget = playlist },
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            Card(
+                                onClick = {
+                                    expanded[playlist.id] = !isExpanded
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
-                                Text(playlist.name, style = MaterialTheme.typography.titleMedium)
-                                Text(
-                                    text = stringResource(R.string.label_song_count, playlistSongs.size),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 12.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    KaraMemoActionIconButton(
-                                        onClick = { onTogglePin(playlist.id) },
-                                        contentDescription = if (pinnedPlaylists.contains(playlist.id)) {
-                                            stringResource(R.string.action_unpin)
-                                        } else {
-                                            stringResource(R.string.action_pin)
-                                        },
-                                        imageVector = if (pinnedPlaylists.contains(playlist.id)) {
-                                            Icons.Default.PushPin
-                                        } else {
-                                            Icons.Outlined.PushPin
-                                        },
-                                        iconTint = MaterialTheme.colorScheme.primary,
-                                    )
-                                    ElevatedAssistChip(
-                                        onClick = { onOpenPicker(playlist) },
-                                        label = { Text(stringResource(R.string.action_manage_songs)) },
-                                        leadingIcon = {
-                                            Icon(Icons.AutoMirrored.Filled.PlaylistAddCheck, contentDescription = null)
-                                        },
-                                    )
-                                    KaraMemoActionIconButton(
-                                        onClick = { expanded[playlist.id] = !isExpanded },
-                                        contentDescription = if (isExpanded) {
-                                            stringResource(R.string.action_hide_songs)
-                                        } else {
-                                            stringResource(R.string.action_show_songs)
-                                        },
-                                        imageVector = if (isExpanded) {
-                                            Icons.Default.ExpandLess
-                                        } else {
-                                            Icons.Default.ExpandMore
-                                        },
-                                    )
-                                    KaraMemoActionIconButton(
-                                        onClick = { deleteTarget = playlist },
-                                        contentDescription = stringResource(R.string.action_delete),
-                                        imageVector = Icons.Default.Delete,
-                                        iconTint = MaterialTheme.colorScheme.error,
-                                    )
-                                }
-
-                                if (isExpanded) {
-                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        if (playlistSongs.isEmpty()) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.weight(1f),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
                                             Text(
-                                                text = stringResource(R.string.empty_playlist_detail),
+                                                text = playlist.name,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.label_song_count, playlistSongs.size),
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
-                                        } else {
-                                            playlistSongs.forEach { song ->
-                                                SongItemRow(
-                                                    song = song,
-                                                    playlistName = playlist.name,
-                                                    onEdit = onEditSong,
-                                                    onDelete = onDeleteSong,
-                                                    onToggleFavorite = onToggleFavorite,
+                                        }
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            KaraMemoActionIconButton(
+                                                onClick = { onTogglePin(playlist.id) },
+                                                contentDescription = if (pinnedPlaylists.contains(playlist.id)) {
+                                                    stringResource(R.string.action_unpin)
+                                                } else {
+                                                    stringResource(R.string.action_pin)
+                                                },
+                                                imageVector = if (pinnedPlaylists.contains(playlist.id)) {
+                                                    Icons.Default.PushPin
+                                                } else {
+                                                    Icons.Outlined.PushPin
+                                                },
+                                                size = 40.dp,
+                                                iconTint = MaterialTheme.colorScheme.primary,
+                                            )
+                                            KaraMemoActionIconButton(
+                                                onClick = { onAddSongToPlaylist(playlist) },
+                                                contentDescription = stringResource(R.string.action_add_song_to_playlist),
+                                                imageVector = Icons.Default.Add,
+                                                size = 40.dp,
+                                            )
+                                            KaraMemoActionIconButton(
+                                                onClick = { onOpenPicker(playlist) },
+                                                contentDescription = stringResource(R.string.action_select_songs),
+                                                imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                                                size = 40.dp,
+                                            )
+                                        }
+                                    }
+
+                                    if (isExpanded) {
+                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            if (playlistSongs.isEmpty()) {
+                                                Text(
+                                                    text = stringResource(R.string.empty_playlist_detail),
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 )
+                                            } else {
+                                                playlistSongs
+                                                    .groupBy { it.artist }
+                                                    .toSortedMap(String.CASE_INSENSITIVE_ORDER)
+                                                    .forEach { (artist, artistSongs) ->
+                                                        Column(
+                                                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                                                        ) {
+                                                            Text(
+                                                                text = artist,
+                                                                style = MaterialTheme.typography.labelLarge,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                modifier = Modifier.padding(start = 4.dp, top = 2.dp),
+                                                            )
+
+                                                            artistSongs
+                                                                .sortedBy { it.title.lowercase() }
+                                                                .forEach { song ->
+                                                                    SongItemRow(
+                                                                        song = song,
+                                                                        onEdit = onEditSong,
+                                                                        onDelete = onDeleteSong,
+                                                                        onToggleFavorite = onToggleFavorite,
+                                                                        compactMetadata = true,
+                                                                        showArtistInfo = false,
+                                                                    )
+                                                                }
+                                                        }
+                                                    }
                                             }
                                         }
                                     }
@@ -166,7 +196,7 @@ fun PlaylistListScreen(
                 }
             }
 
-            AdBanner()
+            AdBanner(showAd = showAds)
         }
 
         FloatingActionButton(
@@ -223,9 +253,11 @@ private fun PlaylistListScreenPreview() {
         PlaylistListScreen(
             playlists = PreviewFixtures.playlists,
             songs = PreviewFixtures.songs,
+            showAds = true,
             pinnedPlaylists = PreviewFixtures.pinnedPlaylists,
             onTogglePin = {},
             onAddPlaylist = {},
+            onAddSongToPlaylist = {},
             onOpenPicker = {},
             onEditSong = {},
             onDeleteSong = {},

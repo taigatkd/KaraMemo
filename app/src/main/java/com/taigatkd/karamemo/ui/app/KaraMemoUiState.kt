@@ -1,5 +1,6 @@
 package com.taigatkd.karamemo.ui.app
 
+import com.taigatkd.karamemo.billing.FREE_SONG_LIMIT
 import com.taigatkd.karamemo.domain.model.KaraokeMachine
 import com.taigatkd.karamemo.domain.model.KaraokeMachineSettings
 import com.taigatkd.karamemo.domain.model.Playlist
@@ -17,6 +18,17 @@ data class KaraMemoUiState(
     val lastUsedArtist: String? = null,
     val searchQuery: String = "",
     val sortType: SongSortType = SongSortType.DATE_DESC,
+    val isProEnabled: Boolean = false,
+    val hasRealProPurchase: Boolean = false,
+    val isMockProEnabled: Boolean = false,
+    val canUseMockBilling: Boolean = false,
+    val isBillingReady: Boolean = false,
+    val isProductAvailable: Boolean = false,
+    val isPurchaseInProgress: Boolean = false,
+    val proPriceLabel: String? = null,
+    val freeSongLimit: Int = FREE_SONG_LIMIT,
     val isInitialized: Boolean = false,
-)
-
+) {
+    val remainingFreeSongs: Int
+        get() = (freeSongLimit - songs.size).coerceAtLeast(0)
+}

@@ -34,6 +34,7 @@ internal object PreviewFixtures {
             isFavorite = true,
             playlistId = "playlist-favorites",
             createdAt = Instant.ofEpochMilli(3_000),
+            score = 96.2,
         ),
         Song(
             id = "song-2",
@@ -44,6 +45,7 @@ internal object PreviewFixtures {
             isFavorite = false,
             playlistId = "playlist-practice",
             createdAt = Instant.ofEpochMilli(2_000),
+            score = 91.5,
         ),
         Song(
             id = "song-3",
@@ -54,6 +56,7 @@ internal object PreviewFixtures {
             isFavorite = false,
             playlistId = null,
             createdAt = Instant.ofEpochMilli(1_000),
+            score = null,
         ),
     )
 

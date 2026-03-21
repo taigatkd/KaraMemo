@@ -13,5 +13,5 @@ data class SongEntity(
     val isFavorite: Boolean,
     val playlistId: String?,
     val createdAtEpochMillis: Long,
+    val scoreValue: Double?,
 )
-

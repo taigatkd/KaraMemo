@@ -16,6 +16,7 @@ class KaraMemoViewModelFactory(
                 songRepository = appContainer.songRepository,
                 playlistRepository = appContainer.playlistRepository,
                 preferencesRepository = appContainer.preferencesRepository,
+                billingRepository = appContainer.billingRepository,
                 stringResolver = stringResolver,
             ) as T
         }

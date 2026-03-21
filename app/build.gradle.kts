@@ -22,14 +22,25 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-
-        buildConfigField("boolean", "ADS_ENABLED", "false")
-        buildConfigField("String", "BANNER_AD_UNIT_ID", "\"\"")
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "ADS_ENABLED", "true")
+            buildConfigField("boolean", "MOCK_BILLING_ENABLED", "true")
+            buildConfigField("String", "PRO_PRODUCT_ID", "\"karamemo_pro\"")
+            buildConfigField("String", "BANNER_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/9214589741\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+            resValue("string", "admob_app_id", "ca-app-pub-3940256099942544~3347511713")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("boolean", "ADS_ENABLED", "false")
+            buildConfigField("boolean", "MOCK_BILLING_ENABLED", "false")
+            buildConfigField("String", "PRO_PRODUCT_ID", "\"karamemo_pro\"")
+            buildConfigField("String", "BANNER_AD_UNIT_ID", "\"\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"\"")
+            resValue("string", "admob_app_id", "ca-app-pub-3940256099942544~3347511713")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -84,6 +95,8 @@ dependencies {
     ksp("androidx.room:room-compiler:2.8.1")
 
     implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation("com.google.android.gms:play-services-ads:24.9.0")
+    implementation("com.android.billingclient:billing:8.3.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")

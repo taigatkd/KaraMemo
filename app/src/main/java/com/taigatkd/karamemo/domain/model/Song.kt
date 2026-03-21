@@ -11,5 +11,5 @@ data class Song(
     val isFavorite: Boolean = false,
     val playlistId: String? = null,
     val createdAt: Instant,
+    val score: Double? = null,
 )
-

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -26,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.taigatkd.karamemo.R
@@ -34,6 +36,7 @@ import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.KaraMemoModalSheet
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
+import java.math.BigDecimal
 import kotlinx.coroutines.launch
 
 data class SongEditorRequest(
@@ -46,7 +49,6 @@ data class SongEditorRequest(
 fun SongEditorSheet(
     request: SongEditorRequest,
     playlists: List<Playlist>,
-    lastUsedArtist: String?,
     onDismiss: () -> Unit,
     onSave: suspend (
         artist: String,
@@ -55,11 +57,12 @@ fun SongEditorSheet(
         memo: String,
         isFavorite: Boolean,
         playlistId: String?,
+        score: Double?,
     ) -> Boolean,
 ) {
     val existingSong = request.song
-    var artist by rememberSaveable(existingSong?.id, request.initialArtist, lastUsedArtist) {
-        mutableStateOf(existingSong?.artist ?: request.initialArtist ?: lastUsedArtist.orEmpty())
+    var artist by rememberSaveable(existingSong?.id, request.initialArtist) {
+        mutableStateOf(existingSong?.artist ?: request.initialArtist.orEmpty())
     }
     var title by rememberSaveable(existingSong?.id) { mutableStateOf(existingSong?.title.orEmpty()) }
     var memo by rememberSaveable(existingSong?.id) { mutableStateOf(existingSong?.memo.orEmpty()) }
@@ -68,11 +71,26 @@ fun SongEditorSheet(
     var selectedPlaylistId by rememberSaveable(existingSong?.id, request.initialPlaylistId) {
         mutableStateOf(existingSong?.playlistId ?: request.initialPlaylistId)
     }
+    var scoreInput by rememberSaveable(existingSong?.id) {
+        mutableStateOf(existingSong?.score?.let(::formatScore).orEmpty())
+    }
+    var scoreErrorResId by remember { mutableStateOf<Int?>(null) }
     var menuExpanded by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val titleRes = if (existingSong == null) R.string.title_add_song else R.string.title_edit_song
     val saveRes = if (existingSong == null) R.string.button_save_song else R.string.button_update_song
+
+    fun parseScoreOrNull(): Double? {
+        val normalizedInput = scoreInput.trim()
+        if (normalizedInput.isBlank()) return null
+        val parsed = normalizedInput.toDoubleOrNull()
+        if (parsed == null || !parsed.isFinite() || parsed < 0.0 || parsed > 100.0) {
+            scoreErrorResId = R.string.message_invalid_score
+            return null
+        }
+        return parsed
+    }
 
     KaraMemoModalSheet(onDismissRequest = onDismiss) {
         Column(
@@ -155,6 +173,24 @@ fun SongEditorSheet(
             }
 
             OutlinedTextField(
+                value = scoreInput,
+                onValueChange = {
+                    scoreInput = it
+                    scoreErrorResId = null
+                },
+                label = { Text(stringResource(R.string.label_score)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                isError = scoreErrorResId != null,
+                supportingText = {
+                    scoreErrorResId?.let { resId ->
+                        Text(stringResource(resId))
+                    }
+                },
+            )
+
+            OutlinedTextField(
                 value = memo,
                 onValueChange = { memo = it },
                 label = { Text(stringResource(R.string.label_memo)) },
@@ -176,6 +212,9 @@ fun SongEditorSheet(
             Button(
                 onClick = {
                     scope.launch {
+                        val score = parseScoreOrNull()
+                        if (scoreErrorResId != null) return@launch
+
                         isSaving = true
                         val saved = onSave(
                             artist,
@@ -184,6 +223,7 @@ fun SongEditorSheet(
                             memo,
                             isFavorite,
                             selectedPlaylistId,
+                            score,
                         )
                         isSaving = false
                         if (!saved) return@launch
@@ -196,6 +236,8 @@ fun SongEditorSheet(
                             key = 0
                             isFavorite = false
                             selectedPlaylistId = request.initialPlaylistId
+                            scoreInput = ""
+                            scoreErrorResId = null
                         }
                     }
                 },
@@ -212,6 +254,9 @@ fun SongEditorSheet(
 
 private fun formatSignedKey(value: Int): String = if (value > 0) "+$value" else value.toString()
 
+private fun formatScore(value: Double): String =
+    BigDecimal.valueOf(value).stripTrailingZeros().toPlainString()
+
 @Preview(showBackground = true, widthDp = 412, heightDp = 892)
 @Composable
 private fun SongEditorSheetPreview() {
@@ -219,9 +264,8 @@ private fun SongEditorSheetPreview() {
         SongEditorSheet(
             request = SongEditorRequest(song = PreviewFixtures.songs.first()),
             playlists = PreviewFixtures.playlists,
-            lastUsedArtist = PreviewFixtures.songs.first().artist,
             onDismiss = {},
-            onSave = { _, _, _, _, _, _ -> true },
+            onSave = { _, _, _, _, _, _, _ -> true },
         )
     }
 }

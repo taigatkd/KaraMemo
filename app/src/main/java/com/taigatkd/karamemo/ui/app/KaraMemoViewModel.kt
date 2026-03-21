@@ -1,9 +1,19 @@
 package com.taigatkd.karamemo.ui.app
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.taigatkd.karamemo.R
+import com.taigatkd.karamemo.ads.InterstitialOpportunity
+import com.taigatkd.karamemo.ads.MonetizationPolicy
+import com.taigatkd.karamemo.ads.NaturalBreakPoint
+import com.taigatkd.karamemo.billing.BillingEvent
+import com.taigatkd.karamemo.billing.BillingLaunchResult
+import com.taigatkd.karamemo.billing.BillingRepository
+import com.taigatkd.karamemo.billing.BillingState
+import com.taigatkd.karamemo.billing.FREE_SONG_LIMIT
 import com.taigatkd.karamemo.common.StringResolver
+import com.taigatkd.karamemo.data.repository.MonetizationPreferences
 import com.taigatkd.karamemo.data.repository.PlaylistRepository
 import com.taigatkd.karamemo.data.repository.PreferencesRepository
 import com.taigatkd.karamemo.data.repository.SongRepository
@@ -12,6 +22,7 @@ import com.taigatkd.karamemo.domain.model.KaraokeMachineSettings
 import com.taigatkd.karamemo.domain.model.Playlist
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.domain.model.SongSortType
+import com.taigatkd.karamemo.domain.model.defaultMachineSettings
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,11 +31,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class KaraMemoViewModel(
     private val songRepository: SongRepository,
     private val playlistRepository: PlaylistRepository,
     private val preferencesRepository: PreferencesRepository,
+    private val billingRepository: BillingRepository,
     private val stringResolver: StringResolver,
 ) : ViewModel() {
     private data class RepositorySnapshot(
@@ -35,13 +48,20 @@ class KaraMemoViewModel(
         val pinnedArtists: Set<String>,
         val pinnedPlaylists: Set<String>,
         val lastUsedArtist: String?,
+        val songSortType: SongSortType,
+        val monetizationPreferences: MonetizationPreferences,
     )
 
     private val searchQuery = MutableStateFlow("")
-    private val sortType = MutableStateFlow(SongSortType.DATE_DESC)
     private val messages = MutableSharedFlow<String>()
+    private val interstitialOpportunities = MutableSharedFlow<InterstitialOpportunity>(extraBufferCapacity = 1)
+    private val upgradePromptRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private var sessionInterstitialShownCount = 0
+    private var interstitialRequestInFlight = false
 
     val snackbarMessages = messages.asSharedFlow()
+    val interstitialRequests = interstitialOpportunities.asSharedFlow()
+    val upgradePrompts = upgradePromptRequests.asSharedFlow()
 
     private val songsAndPlaylists = combine(
         songRepository.observeSongs(),
@@ -61,34 +81,67 @@ class KaraMemoViewModel(
         preferencesRepository.pinnedArtists,
         preferencesRepository.pinnedPlaylists,
         preferencesRepository.lastUsedArtist,
-    ) { pinnedArtists, pinnedPlaylists, lastUsedArtist ->
-        Triple(pinnedArtists, pinnedPlaylists, lastUsedArtist)
+        preferencesRepository.songSortType,
+    ) { pinnedArtists, pinnedPlaylists, lastUsedArtist, songSortType ->
+        PreferenceSnapshot(
+            pinnedArtists = pinnedArtists,
+            pinnedPlaylists = pinnedPlaylists,
+            lastUsedArtist = lastUsedArtist,
+            songSortType = songSortType,
+        )
     }
+
+    private val monetizationState = preferencesRepository.monetizationPreferences.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = MonetizationPreferences(),
+    )
+    private val billingState = billingRepository.state.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = BillingState(),
+    )
 
     private val repositorySnapshot = combine(
         songsAndPlaylists,
         machineState,
         preferenceState,
-    ) { songsAndPlaylists, machineState, preferenceState ->
+        monetizationState,
+    ) { songsAndPlaylists, machineState, preferenceState, monetizationPreferences ->
         val (songs, playlists) = songsAndPlaylists
         val (currentMachine, machineSettings) = machineState
-        val (pinnedArtists, pinnedPlaylists, lastUsedArtist) = preferenceState
         RepositorySnapshot(
             songs = songs,
             playlists = playlists,
             currentMachine = currentMachine,
             machineSettings = machineSettings,
-            pinnedArtists = pinnedArtists,
-            pinnedPlaylists = pinnedPlaylists,
-            lastUsedArtist = lastUsedArtist,
+            pinnedArtists = preferenceState.pinnedArtists,
+            pinnedPlaylists = preferenceState.pinnedPlaylists,
+            lastUsedArtist = preferenceState.lastUsedArtist,
+            songSortType = preferenceState.songSortType,
+            monetizationPreferences = monetizationPreferences,
         )
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = RepositorySnapshot(
+            songs = emptyList(),
+            playlists = emptyList(),
+            currentMachine = KaraokeMachine.DAM,
+            machineSettings = defaultMachineSettings(),
+            pinnedArtists = emptySet(),
+            pinnedPlaylists = emptySet(),
+            lastUsedArtist = null,
+            songSortType = SongSortType.DATE_DESC,
+            monetizationPreferences = MonetizationPreferences(),
+        ),
+    )
 
     val uiState = combine(
         repositorySnapshot,
         searchQuery,
-        sortType,
-    ) { snapshot, query, sort ->
+        billingState,
+    ) { snapshot, query, billing ->
         KaraMemoUiState(
             songs = snapshot.songs,
             playlists = snapshot.playlists,
@@ -98,7 +151,16 @@ class KaraMemoViewModel(
             pinnedPlaylists = snapshot.pinnedPlaylists,
             lastUsedArtist = snapshot.lastUsedArtist,
             searchQuery = query,
-            sortType = sort,
+            sortType = snapshot.songSortType,
+            isProEnabled = billing.isProEnabled,
+            hasRealProPurchase = billing.isRealProEnabled,
+            isMockProEnabled = billing.isMockProEnabled,
+            canUseMockBilling = billing.canUseMockBilling,
+            isBillingReady = billing.isBillingReady,
+            isProductAvailable = billing.isProductAvailable,
+            isPurchaseInProgress = billing.isPurchaseInProgress,
+            proPriceLabel = billing.proPriceLabel,
+            freeSongLimit = FREE_SONG_LIMIT,
             isInitialized = true,
         )
     }.stateIn(
@@ -107,12 +169,23 @@ class KaraMemoViewModel(
         initialValue = KaraMemoUiState(),
     )
 
+    init {
+        viewModelScope.launch {
+            billingRepository.events.collect { event ->
+                handleBillingEvent(event)
+            }
+        }
+        startBilling()
+    }
+
     fun setSearchQuery(query: String) {
         searchQuery.value = query
     }
 
     fun setSortType(value: SongSortType) {
-        sortType.value = value
+        viewModelScope.launch {
+            preferencesRepository.setSongSortType(value)
+        }
     }
 
     suspend fun saveSong(
@@ -123,6 +196,7 @@ class KaraMemoViewModel(
         memo: String,
         isFavorite: Boolean,
         playlistId: String?,
+        score: Double?,
     ): Boolean {
         val normalizedArtist = artist.trim()
         val normalizedTitle = title.trim()
@@ -139,6 +213,21 @@ class KaraMemoViewModel(
             return false
         }
 
+        if (
+            editingSongId == null &&
+            !uiState.value.isProEnabled &&
+            uiState.value.songs.size >= uiState.value.freeSongLimit
+        ) {
+            messages.emit(
+                stringResolver.get(
+                    R.string.message_song_limit_reached,
+                    uiState.value.freeSongLimit,
+                ),
+            )
+            upgradePromptRequests.tryEmit(Unit)
+            return false
+        }
+
         val editingSong = editingSongId?.let { id ->
             uiState.value.songs.firstOrNull { song -> song.id == id }
         }
@@ -152,10 +241,14 @@ class KaraMemoViewModel(
             isFavorite = isFavorite,
             playlistId = normalizedPlaylistId,
             createdAt = editingSong?.createdAt ?: Instant.now(),
+            score = score,
         )
 
         songRepository.saveSong(song)
         preferencesRepository.setLastUsedArtist(normalizedArtist)
+        if (editingSong == null) {
+            preferencesRepository.recordSongAdded()
+        }
         messages.emit(
             stringResolver.get(
                 if (editingSong == null) R.string.message_song_saved else R.string.message_song_updated,
@@ -252,6 +345,77 @@ class KaraMemoViewModel(
     suspend fun getRandomSongs(count: Int = 5): List<Song> =
         songRepository.getRandomSongs(count)
 
+    fun onNaturalBreak(breakPoint: NaturalBreakPoint) {
+        viewModelScope.launch {
+            if (uiState.value.isProEnabled) return@launch
+            if (interstitialRequestInFlight) return@launch
+
+            val preferences = repositorySnapshot.value.monetizationPreferences
+            if (
+                !MonetizationPolicy.canRequestInterstitial(
+                    preferences = preferences,
+                    sessionInterstitialShownCount = sessionInterstitialShownCount,
+                    nowEpochMillis = System.currentTimeMillis(),
+                )
+            ) {
+                return@launch
+            }
+
+            interstitialRequestInFlight = true
+            interstitialOpportunities.emit(
+                InterstitialOpportunity(
+                    breakPoint = breakPoint,
+                    totalSongsAdded = preferences.totalSongsAdded,
+                ),
+            )
+        }
+    }
+
+    fun onInterstitialShown() {
+        viewModelScope.launch {
+            interstitialRequestInFlight = false
+            sessionInterstitialShownCount += 1
+            preferencesRepository.recordInterstitialShown(System.currentTimeMillis())
+        }
+    }
+
+    fun onInterstitialNotShown() {
+        interstitialRequestInFlight = false
+    }
+
+    fun startBilling() {
+        viewModelScope.launch {
+            billingRepository.start()
+        }
+    }
+
+    fun refreshBilling() {
+        viewModelScope.launch {
+            billingRepository.refresh()
+        }
+    }
+
+    fun restorePurchases() {
+        viewModelScope.launch {
+            billingRepository.restorePurchases()
+        }
+    }
+
+    fun purchasePro(activity: Activity) {
+        viewModelScope.launch {
+            when (val result = billingRepository.launchProPurchase(activity)) {
+                BillingLaunchResult.Launched -> Unit
+                is BillingLaunchResult.Error -> handleBillingEvent(result.event)
+            }
+        }
+    }
+
+    fun setMockProEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            billingRepository.setMockProEnabled(enabled)
+        }
+    }
+
     fun filteredSongs(source: List<Song> = uiState.value.songs): List<Song> {
         val query = uiState.value.searchQuery.trim().lowercase()
         val filtered = source.filter { song ->
@@ -271,4 +435,27 @@ class KaraMemoViewModel(
             )
         }
     }
+
+    private suspend fun handleBillingEvent(event: BillingEvent) {
+        val messageRes = when (event) {
+            BillingEvent.PRO_PURCHASED -> R.string.message_pro_purchase_success
+            BillingEvent.PRO_RESTORED -> R.string.message_pro_purchase_restored
+            BillingEvent.PRO_PENDING -> R.string.message_pro_purchase_pending
+            BillingEvent.PRO_CANCELLED -> R.string.message_pro_purchase_cancelled
+            BillingEvent.PRO_PURCHASE_FAILED -> R.string.message_pro_purchase_failed
+            BillingEvent.RESTORE_NOT_FOUND -> R.string.message_pro_restore_not_found
+            BillingEvent.BILLING_UNAVAILABLE -> R.string.message_billing_unavailable
+            BillingEvent.PRODUCT_UNAVAILABLE -> R.string.message_pro_product_unavailable
+            BillingEvent.MOCK_PRO_ENABLED -> R.string.message_mock_pro_enabled
+            BillingEvent.MOCK_PRO_DISABLED -> R.string.message_mock_pro_disabled
+        }
+        messages.emit(stringResolver.get(messageRes))
+    }
+
+    private data class PreferenceSnapshot(
+        val pinnedArtists: Set<String>,
+        val pinnedPlaylists: Set<String>,
+        val lastUsedArtist: String?,
+        val songSortType: SongSortType,
+    )
 }

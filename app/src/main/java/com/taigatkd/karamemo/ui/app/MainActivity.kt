@@ -16,14 +16,26 @@ class MainActivity : ComponentActivity() {
             stringResolver = AndroidStringResolver(applicationContext),
         )
     }
+    private val adMobManager by lazy {
+        (application as KaraMemoApplication).appContainer.adMobManager
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        adMobManager.initialize()
         enableEdgeToEdge()
         setContent {
             KaraMemoTheme(useDynamicColor = false) {
-                KaraMemoApp(viewModel = viewModel)
+                KaraMemoApp(
+                    viewModel = viewModel,
+                    adMobManager = adMobManager,
+                )
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshBilling()
     }
 }
