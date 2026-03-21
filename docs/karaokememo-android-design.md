@@ -23,6 +23,9 @@ The design documents for this project are split under `docs/design/`.
 - Read `08-ui-visual-and-localization.md` for the current visual language, localization policy, and accessibility-oriented UI rules.
 - Read `09-monetization.md` for ad cadence, persistence, and natural-break rules.
 
+## Related Docs
+- [`google-play-release-cycle.md`](./google-play-release-cycle.md) for the Git-managed Google Play release checklist.
+
 ## Current Focus
 The latest pass adds a dedicated design document for:
 - a music-inspired Compose visual language
