@@ -16,8 +16,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.KaraMemoActionIconButton
+import com.taigatkd.karamemo.ui.components.KaraMemoRecordCard
 import com.taigatkd.karamemo.ui.components.KaraMemoSwipeToDeleteContainer
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.MidnightStage
@@ -78,10 +77,9 @@ fun SongItemRow(
     }
 
     val rowContent: @Composable () -> Unit = {
-        Card(
+        KaraMemoRecordCard(
             onClick = { onEdit(song) },
             modifier = modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Row(
                 modifier = Modifier

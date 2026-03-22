@@ -2,6 +2,8 @@ package com.taigatkd.karamemo.ui.app
 
 import android.app.Activity
 import android.content.ContextWrapper
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.LibraryMusic
@@ -46,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -79,10 +84,17 @@ fun KaraMemoApp(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var selectedTab by rememberSaveable { mutableStateOf(AppTab.SONGS) }
     val colorScheme = MaterialTheme.colorScheme
     val activity = LocalContext.current.findActivity()
+    val appName = stringResource(R.string.app_name)
     val noSongsMessage = stringResource(R.string.snackbar_no_songs)
     val billingUnavailableMessage = stringResource(R.string.message_billing_unavailable)
+    val screenTitle = when (selectedTab) {
+        AppTab.ARTISTS -> stringResource(R.string.title_artist_list_screen)
+        AppTab.SONGS -> stringResource(R.string.title_song_list_screen)
+        AppTab.PLAYLISTS -> stringResource(R.string.title_playlist_list_screen)
+    }
     val backgroundBrush = remember(colorScheme) {
         Brush.verticalGradient(
             listOf(
@@ -93,7 +105,6 @@ fun KaraMemoApp(
         )
     }
 
-    var selectedTab by rememberSaveable { mutableStateOf(AppTab.SONGS) }
     var showSearchBar by rememberSaveable { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
     var showPlaylistAddSheet by remember { mutableStateOf(false) }
@@ -152,21 +163,61 @@ fun KaraMemoApp(
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = when (selectedTab) {
-                                AppTab.ARTISTS -> stringResource(R.string.title_artist_list_screen)
-                                AppTab.SONGS -> stringResource(R.string.title_song_list_screen)
-                                AppTab.PLAYLISTS -> stringResource(R.string.title_playlist_list_screen)
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+                    shadowElevation = 8.dp,
+                    tonalElevation = 0.dp,
+                ) {
+                    Column {
+                        TopAppBar(
+                            title = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    Surface(
+                                        modifier = Modifier.size(42.dp),
+                                        shape = RoundedCornerShape(14.dp),
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                        border = BorderStroke(
+                                            width = 1.dp,
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                                        ),
+                                        tonalElevation = 0.dp,
+                                    ) {
+                                        Image(
+                                            painter = painterResource(R.drawable.ic_launcher_foreground_bitmap),
+                                            contentDescription = appName,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(6.dp),
+                                        )
+                                    }
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(
+                                            text = appName,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Text(
+                                            text = screenTitle,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = MaterialTheme.colorScheme.onBackground,
+                                        )
+                                    }
+                                }
                             },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent,
+                                titleContentColor = MaterialTheme.colorScheme.onBackground,
+                            ),
                         )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    ),
-                )
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+                            thickness = 1.dp,
+                        )
+                    }
+                }
             },
             bottomBar = {
                 Surface(

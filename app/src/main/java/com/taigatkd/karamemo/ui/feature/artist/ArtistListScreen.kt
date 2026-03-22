@@ -15,8 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,6 +35,7 @@ import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.AdBanner
 import com.taigatkd.karamemo.ui.components.KaraMemoActionIconButton
+import com.taigatkd.karamemo.ui.components.KaraMemoRecordCard
 import com.taigatkd.karamemo.ui.components.KaraMemoSwipeToDeleteContainer
 import com.taigatkd.karamemo.ui.feature.song.SongItemRow
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
@@ -76,12 +76,11 @@ fun ArtistListScreen(
                         KaraMemoSwipeToDeleteContainer(
                             onDeleteRequested = { deleteTarget = artist },
                         ) {
-                            Card(
+                            KaraMemoRecordCard(
                                 onClick = {
                                     expandedArtists[artist] = !isExpanded
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -141,16 +140,25 @@ fun ArtistListScreen(
                                     }
 
                                     if (isExpanded) {
-                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            grouped[artist].orEmpty().forEach { song ->
-                                                SongItemRow(
-                                                    song = song,
-                                                    onEdit = onEditSong,
-                                                    onDelete = onDeleteSong,
-                                                    onToggleFavorite = onToggleFavorite,
-                                                    showArtistInfo = false,
-                                                )
-                                            }
+                                        HorizontalDivider(
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+                                        )
+                                        Column(
+                                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                                            modifier = Modifier.padding(top = 8.dp),
+                                        ) {
+                                            grouped[artist]
+                                                .orEmpty()
+                                                .sortedBy { it.title.lowercase() }
+                                                .forEach { song ->
+                                                    SongItemRow(
+                                                        song = song,
+                                                        onEdit = onEditSong,
+                                                        onDelete = onDeleteSong,
+                                                        onToggleFavorite = onToggleFavorite,
+                                                        showArtistInfo = false,
+                                                    )
+                                                }
                                         }
                                     }
                                 }

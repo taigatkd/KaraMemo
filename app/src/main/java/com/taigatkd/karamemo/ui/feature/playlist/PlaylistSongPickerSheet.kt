@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -27,6 +28,7 @@ import com.taigatkd.karamemo.R
 import com.taigatkd.karamemo.domain.model.Playlist
 import com.taigatkd.karamemo.domain.model.Song
 import com.taigatkd.karamemo.ui.components.KaraMemoModalSheet
+import com.taigatkd.karamemo.ui.components.KaraMemoRecordCard
 import com.taigatkd.karamemo.ui.preview.PreviewFixtures
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 
@@ -68,36 +70,51 @@ fun PlaylistSongPickerSheet(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(filteredSongs, key = { it.id }) { song ->
-                Row(
+                KaraMemoRecordCard(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    onClick = {
+                        val next = selectedIds.toMutableSet()
+                        if (selectedIds.contains(song.id)) {
+                            next.remove(song.id)
+                        } else {
+                            next.add(song.id)
+                        }
+                        selectedIds = next
+                    },
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = song.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = song.artist,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = song.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = song.artist,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Checkbox(
+                            checked = selectedIds.contains(song.id),
+                            onCheckedChange = { checked ->
+                                val next = selectedIds.toMutableSet()
+                                if (checked) {
+                                    next.add(song.id)
+                                } else {
+                                    next.remove(song.id)
+                                }
+                                selectedIds = next
+                            },
                         )
                     }
-                    Checkbox(
-                        checked = selectedIds.contains(song.id),
-                        onCheckedChange = { checked ->
-                            val next = selectedIds.toMutableSet()
-                            if (checked) {
-                                next.add(song.id)
-                            } else {
-                                next.remove(song.id)
-                            }
-                            selectedIds = next
-                        },
-                    )
                 }
             }
         }

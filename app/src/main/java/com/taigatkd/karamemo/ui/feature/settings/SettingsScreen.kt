@@ -2,7 +2,6 @@ package com.taigatkd.karamemo.ui.feature.settings
 
 import android.content.Context
 import androidx.annotation.RawRes
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,8 +22,6 @@ import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -48,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.taigatkd.karamemo.R
+import com.taigatkd.karamemo.ui.components.KaraMemoRecordCard
 import com.taigatkd.karamemo.ui.theme.KaraMemoTheme
 
 data class SettingsBillingUi(
@@ -201,11 +199,7 @@ private fun SettingsPlanCard(
     billingUi: SettingsBillingUi,
     onOpenPage: (() -> Unit)?,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-    ) {
+    KaraMemoRecordCard {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -346,11 +340,7 @@ private fun SettingsProContent(
         }
 
         item {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-            ) {
+            KaraMemoRecordCard {
                 Column(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -414,11 +404,7 @@ private fun SettingsProContent(
         }
 
         item {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-            ) {
+            KaraMemoRecordCard {
                 Text(
                     text = documentText,
                     style = MaterialTheme.typography.bodyMedium,
@@ -433,16 +419,13 @@ private fun SettingsProContent(
 private fun SettingsRow(
     item: SettingsRowItem,
 ) {
-    Card(
+    KaraMemoRecordCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        onClick = item.onClick,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = item.onClick)
                 .padding(horizontal = 18.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
