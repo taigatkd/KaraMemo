@@ -15,7 +15,7 @@
   - Unlimited songs
   - Banner ads hidden
   - Interstitials disabled
-  - One-time purchase: `JPY 480`
+  - One-time purchase: `JPY 380`
 
 ## Free Limit Policy
 - Count only saved songs that did not exist before.
@@ -78,7 +78,7 @@ flowchart TD
     B --> C["Buy Pro with Google Play"]
     B --> D["Restore purchases"]
     B --> E["Toggle mock Pro (debug only)"]
-    F["Free user hits 100-song limit"] --> G["Upgrade dialog"]
+F["Free user hits 75-song limit"] --> G["Upgrade dialog"]
     G --> B
 ```
 

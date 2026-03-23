@@ -86,7 +86,7 @@
     <string name="label_plan_free">Free</string>
     <string name="label_plan_pro">Pro</string>
     <string name="label_plan_free_detail">75 songs free, ads included</string>
-    <string name="label_plan_pro_price">JPY 480</string>
+    <string name="label_plan_pro_price">JPY 380</string>
     <string name="label_plan_upgrade_note">Pro includes unlimited songs and an ad-free experience.</string>
     <string name="label_plan_song_limit">Song limit</string>
     <string name="label_plan_song_limit_value">%1$d songs</string>

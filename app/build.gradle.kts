@@ -1,4 +1,51 @@
+import java.util.Properties
+import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+fun Project.stringSetting(name: String): String? =
+    (findProperty(name) as String?)?.takeIf { it.isNotBlank() }
+        ?: System.getenv(name)?.takeIf { it.isNotBlank() }
+
+fun Project.booleanSetting(name: String, default: Boolean): Boolean =
+    stringSetting(name)?.toBooleanStrictOrNull() ?: default
+
+fun Properties.requiredValue(name: String): String =
+    getProperty(name)?.takeIf { it.isNotBlank() }
+        ?: error("Missing `$name` in keystore.properties.")
+
+val releaseAdsEnabled = project.booleanSetting("KARAMEMO_RELEASE_ADS_ENABLED", default = true)
+val releaseAdMobAppId = project.stringSetting("KARAMEMO_ADMOB_APP_ID").orEmpty()
+val releaseBannerAdUnitId = project.stringSetting("KARAMEMO_BANNER_AD_UNIT_ID").orEmpty()
+val releaseInterstitialAdUnitId = project.stringSetting("KARAMEMO_INTERSTITIAL_AD_UNIT_ID").orEmpty()
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use(::load)
+    }
+}
+
+val isReleaseTaskRequested = gradle.startParameter.taskNames.any { taskName ->
+    taskName.contains("release", ignoreCase = true)
+}
+
+if (isReleaseTaskRequested && releaseAdsEnabled) {
+    check(releaseAdMobAppId.isNotBlank()) {
+        "KARAMEMO_ADMOB_APP_ID is required for ads-enabled release builds."
+    }
+    check(releaseBannerAdUnitId.isNotBlank()) {
+        "KARAMEMO_BANNER_AD_UNIT_ID is required for ads-enabled release builds."
+    }
+    check(releaseInterstitialAdUnitId.isNotBlank()) {
+        "KARAMEMO_INTERSTITIAL_AD_UNIT_ID is required for ads-enabled release builds."
+    }
+}
+
+if (isReleaseTaskRequested) {
+    check(keystorePropertiesFile.exists()) {
+        "keystore.properties is required for release builds. Copy keystore.properties.example and fill in local values."
+    }
+}
 
 plugins {
     id("com.android.application")
@@ -24,6 +71,17 @@ android {
         }
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.requiredValue("storeFile"))
+                storePassword = keystoreProperties.requiredValue("storePassword")
+                keyAlias = keystoreProperties.requiredValue("keyAlias")
+                keyPassword = keystoreProperties.requiredValue("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             buildConfigField("boolean", "ADS_ENABLED", "true")
@@ -35,12 +93,13 @@ android {
         }
         release {
             isMinifyEnabled = false
-            buildConfigField("boolean", "ADS_ENABLED", "false")
+            buildConfigField("boolean", "ADS_ENABLED", releaseAdsEnabled.toString())
             buildConfigField("boolean", "MOCK_BILLING_ENABLED", "false")
             buildConfigField("String", "PRO_PRODUCT_ID", "\"karamemo_pro\"")
-            buildConfigField("String", "BANNER_AD_UNIT_ID", "\"\"")
-            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"\"")
-            resValue("string", "admob_app_id", "ca-app-pub-3940256099942544~3347511713")
+            buildConfigField("String", "BANNER_AD_UNIT_ID", "\"$releaseBannerAdUnitId\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"$releaseInterstitialAdUnitId\"")
+            resValue("string", "admob_app_id", releaseAdMobAppId)
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

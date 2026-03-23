@@ -34,5 +34,5 @@ The latest pass adds a dedicated design document for:
 - bottom sheet behavior that opens fully without stopping halfway
 - left-aligned titles for top-level screens
 - a natural-break monetization policy tied to successful song additions
-- a `Free / Pro` plan with a 100-song free limit and a `JPY 480` one-time upgrade
+- a `Free / Pro` plan with a 75-song free limit and a `JPY 380` one-time upgrade
 - Google Play Billing integration plus a debug-only mock purchase path

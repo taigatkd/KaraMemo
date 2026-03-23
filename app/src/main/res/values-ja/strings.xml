@@ -86,7 +86,7 @@
     <string name="label_plan_free">無料版</string>
     <string name="label_plan_pro">Pro</string>
     <string name="label_plan_free_detail">75曲まで無料、広告あり</string>
-    <string name="label_plan_pro_price">480円</string>
+    <string name="label_plan_pro_price">380円</string>
     <string name="label_plan_upgrade_note">Proでは曲数無制限と広告なしが利用できます。</string>
     <string name="label_plan_song_limit">曲数上限</string>
     <string name="label_plan_song_limit_value">%1$d曲</string>

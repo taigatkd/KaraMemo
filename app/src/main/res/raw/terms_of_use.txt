@@ -9,7 +9,7 @@ The app is provided for personal use. You may use the app to manage your own kar
 You are responsible for the song names, memos, and other content you enter into the app. Please do not enter unlawful content or content that you do not have the right to use.
 
 3. Free and Pro plans
-The free plan allows storage of up to 75 songs. The Pro plan is a one-time purchase priced at JPY 480 and unlocks unlimited songs and an ad-free experience. Final pricing, taxes, refunds, and billing handling are subject to Google Play rules and the user's region.
+The free plan allows storage of up to 75 songs. The Pro plan is a one-time purchase priced at JPY 380 and unlocks unlimited songs and an ad-free experience. Final pricing, taxes, refunds, and billing handling are subject to Google Play rules and the user's region.
 
 4. Availability
 The app may change over time. Features can be added, modified, suspended, or removed. The developer does not guarantee uninterrupted availability of all features.
