@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KaraMemo Public Pages</title>
+  <meta name="description" content="KaraMemo の GitHub Pages 公開ページへの入口です。">
+  <link rel="icon" type="image/png" href="./release/assets/google-play/app-icon.png">
+  <link rel="stylesheet" href="./assets/site.css">
+</head>
+<body>
+  <main>
+    <div class="breadcrumb" aria-label="Breadcrumb">
+      <span>GitHub Pages</span>
+      <span class="sep">/</span>
+      <span>Home</span>
+    </div>
+
+    <header class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">KaraMemo Public Pages</div>
+        <h1>公開ページの入口</h1>
+        <p class="lede">
+          GitHub Pages では、公開したいディレクトリごとに <code>index.html</code> があると URL をそのまま開けます。
+          このトップページと各配下の入口ページを追加し、プライバシーポリシーと Google Play 用アセットを辿れる構成にしました。
+        </p>
+        <div class="actions">
+          <a class="button" href="./privacy-policy/index.html">Privacy Policy</a>
+          <a class="button secondary" href="./release/index.html">Release Pages</a>
+          <a class="button secondary" href="./release/assets/google-play/index.html">Google Play Assets</a>
+        </div>
+        <div class="badge-row" aria-label="Page notes">
+          <span class="badge">Pages ルート用の index.html</span>
+          <span class="badge">相対リンクだけで完結</span>
+          <span class="badge">/docs 配下だけで公開可能</span>
+        </div>
+      </div>
+
+      <div class="hero-media">
+        <img class="hero-icon" src="./release/assets/google-play/app-icon.png" alt="KaraMemo app icon">
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>公開ページ</h2>
+          <p class="note">GitHub Pages 上で直接見せたいページだけを HTML 化した入口です。</p>
+        </div>
+      </div>
+
+      <div class="grid">
+        <article class="card">
+          <h3>プライバシーポリシー</h3>
+          <p>Google Play の掲載に使える公開用ページです。英語と日本語の両方を 1 ページにまとめています。</p>
+          <div class="actions">
+            <a class="button" href="./privacy-policy/index.html">開く</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>Google Play アセット</h3>
+          <p>feature graphic、スクリーンショット、play-ready 画像をブラウザで確認できるギャラリーです。</p>
+          <div class="actions">
+            <a class="button" href="./release/assets/google-play/index.html">開く</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>Release Hub</h3>
+          <p>公開向けページの中継点です。アセット各階層の入口へまとめて移動できます。</p>
+          <div class="actions">
+            <a class="button" href="./release/index.html">開く</a>
+          </div>
+        </article>
+      </div>
+
+      <p class="footer-note">
+        GitHub Pages の公開元をこのリポジトリの <code>/docs</code> にしていれば、サイトのルート URL はこのページから始まります。
+      </p>
+    </section>
+  </main>
+</body>
+</html>
