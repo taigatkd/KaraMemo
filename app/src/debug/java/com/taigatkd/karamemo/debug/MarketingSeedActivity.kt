@@ -53,17 +53,17 @@ class MarketingSeedActivity : ComponentActivity() {
                     createdAtEpochMillis = 1_710_000_002_000,
                 ),
             )
-            for (playlist in playlists) {
+            playlists.forEach { playlist ->
                 db.playlistDao().upsert(playlist)
             }
 
             val songs = listOf(
                 SongEntity(
                     id = "song-01",
-                    artist = "Aimer",
-                    title = "Ref:rain",
+                    artist = "Aster",
+                    title = "Skyline",
                     keyValue = 2,
-                    memo = "Watch the breath before the chorus.",
+                    memo = "Save breath for the final chorus.",
                     isFavorite = true,
                     playlistId = "playlist-favorites",
                     createdAtEpochMillis = 1_710_000_003_000,
@@ -71,8 +71,8 @@ class MarketingSeedActivity : ComponentActivity() {
                 ),
                 SongEntity(
                     id = "song-02",
-                    artist = "Ado",
-                    title = "Show",
+                    artist = "Nova June",
+                    title = "Paper Moon",
                     keyValue = -1,
                     memo = "Keep the first verse relaxed.",
                     isFavorite = false,
@@ -82,10 +82,10 @@ class MarketingSeedActivity : ComponentActivity() {
                 ),
                 SongEntity(
                     id = "song-03",
-                    artist = "YOASOBI",
-                    title = "Idol",
+                    artist = "City Echo",
+                    title = "Signal",
                     keyValue = 0,
-                    memo = "Focus on the rapid phrasing.",
+                    memo = "Focus on the fast phrasing.",
                     isFavorite = false,
                     playlistId = "playlist-highnotes",
                     createdAtEpochMillis = 1_710_000_005_000,
@@ -93,8 +93,8 @@ class MarketingSeedActivity : ComponentActivity() {
                 ),
                 SongEntity(
                     id = "song-04",
-                    artist = "Official髭男dism",
-                    title = "Subtitle",
+                    artist = "Blue Harbor",
+                    title = "Afterglow",
                     keyValue = -2,
                     memo = "Lean into the long notes.",
                     isFavorite = true,
@@ -104,8 +104,8 @@ class MarketingSeedActivity : ComponentActivity() {
                 ),
                 SongEntity(
                     id = "song-05",
-                    artist = "米津玄師",
-                    title = "Lemon",
+                    artist = "Lumen Park",
+                    title = "Daybreak",
                     keyValue = 1,
                     memo = "Keep the verse soft and steady.",
                     isFavorite = false,
@@ -115,8 +115,8 @@ class MarketingSeedActivity : ComponentActivity() {
                 ),
                 SongEntity(
                     id = "song-06",
-                    artist = "宇多田ヒカル",
-                    title = "First Love",
+                    artist = "Mellow Tide",
+                    title = "First Snow",
                     keyValue = -3,
                     memo = "Open the vowels on the hook.",
                     isFavorite = true,
@@ -126,8 +126,8 @@ class MarketingSeedActivity : ComponentActivity() {
                 ),
                 SongEntity(
                     id = "song-07",
-                    artist = "Mrs. GREEN APPLE",
-                    title = "ケセラセラ",
+                    artist = "North Harbor",
+                    title = "Silver Line",
                     keyValue = 0,
                     memo = "Stay light on the rhythm.",
                     isFavorite = false,
@@ -137,17 +137,17 @@ class MarketingSeedActivity : ComponentActivity() {
                 ),
                 SongEntity(
                     id = "song-08",
-                    artist = "back number",
-                    title = "水平線",
+                    artist = "Backlight",
+                    title = "Horizon",
                     keyValue = 1,
-                    memo = "Save power for the final chorus.",
+                    memo = "Build power toward the last hook.",
                     isFavorite = false,
                     playlistId = null,
                     createdAtEpochMillis = 1_710_000_010_000,
                     scoreValue = 89.7,
                 ),
             )
-            for (song in songs) {
+            songs.forEach { song ->
                 db.songDao().upsert(song)
             }
 
@@ -176,7 +176,7 @@ class MarketingSeedActivity : ComponentActivity() {
                     music = 24,
                 ),
             )
-            preferences.toggleArtistPin("Aimer")
+            preferences.toggleArtistPin("Aster")
             preferences.togglePlaylistPin("playlist-favorites")
             preferences.setSongSortType(SongSortType.DATE_DESC)
             preferences.setCachedRealProEnabled(false)

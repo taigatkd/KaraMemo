@@ -102,15 +102,15 @@ Use the release build for screenshots. Capture the same story in both Japanese a
 ### Recommended sample data for screenshots
 
 - Artists:
-  - `Aimer`
-  - `Ado`
-  - `YOASOBI`
-  - `Official髭男dism`
+  - `Aster`
+  - `Nova June`
+  - `North Harbor`
+  - `Blue Harbor`
 - Songs:
-  - `Ref:rain`
-  - `Show`
-  - `アイドル`
-  - `Subtitle`
+  - `Skyline`
+  - `Paper Moon`
+  - `Silver Line`
+  - `Afterglow`
 - Playlist examples:
   - `Favorites`
   - `Practice Set`
